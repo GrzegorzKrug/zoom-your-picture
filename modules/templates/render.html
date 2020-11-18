@@ -1,0 +1,11 @@
+{% extends "main.html" %}
+{% if title %}
+   {% block title %}{{ title }}{% endblock %}
+{% endif %}
+{% if content %}
+    {% block content %}{{ content }}{% endblock %}
+{% endif %}
+{% if head %}
+    {% block head %}{{ head }}{% endblock %}
+{% endif %}
+

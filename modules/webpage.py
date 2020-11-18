@@ -1,6 +1,8 @@
 from flask import Flask
 from flask import redirect, url_for, abort, request
-from flask import render_template
+from flask import render_template, make_response
+
+import time
 
 app = Flask(__name__)
 
@@ -55,9 +57,30 @@ def error():
 
 @app.errorhandler(404)
 def error_handler(error):
-    print(error)
     return render_template("missing.html"), 404
 
 
+@app.route("/results")
+def results():
+    cook = request.cookies.get("name")
+    cook = str(cook)
+    render = render_template("render.html", content=cook)
+    return render
+
+
+@app.route("/save")
+def save():
+    render = render_template("main.html")
+    resp = make_response(render)
+    resp.set_cookie("name", "greg")
+    return resp
+
+
+@app.route("/about")
+def about():
+    render = render_template("render.html", content="This is me.")
+    return render
+
+
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

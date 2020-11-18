@@ -1,0 +1,80 @@
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 800;
+  src: url('../fonts/OpenSans-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Goldman';
+  font-style: normal;
+  font-weight: 800;
+  src: url('../fonts/Goldman-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Pacifico';
+  font-style: normal;
+  font-weight: 800;
+  src: url('../fonts/Pacifico-Regular.ttf') format('truetype');
+}
+
+
+body{
+    background-color: #FEFFF2;
+    font-family: 'Open Sans', serif;
+    font-weight: 300;
+    font-size: 1em;
+}
+
+a{
+    color: #2F8FFF;
+    text-decoration: none;
+}
+
+a:hover{
+    text-decoration: underline;
+}
+
+a:visited{
+    color: #2F8FAF;
+}
+
+
+content {
+  background: Linen;
+  margin-top: 50px;
+  margin-left: 100px;
+}
+
+.navbar{
+ margin-left: 10%;
+ margin-right: 10%;
+ text-align: center;
+ color: #2F8FFF;
+ font-size: 2.3em;
+}
+
+.navbar a{
+ color: #2F90FF;
+ font-size: 1em;
+ margin-left: 3%;
+ margin-right: 3%;
+}
+
+p {
+  font-family: Georgia, serif;
+  font-size: 1.2em;
+  color: DarkSlateGray;
+  }
+
+h1 {
+  font-size: 2.5em;
+  color: FireBrick;
+  }
+
+.footer{
+    text-align: center;
+    font-family: 'Pacifico';
+    font-size: 2em;
+}
