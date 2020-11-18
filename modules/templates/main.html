@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+    <head>
+        <title>ZoomIt - {% block title %} Gif maker{% endblock %}</title>
+        <meta charset="UTF-8">
+
+        {% block style %} <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> {% endblock %}
+        {% block head %}
+        {% endblock %}
+
+    </head>
+        <body>
+        <!--Inside templates you also have access to the request, session and g 1 objects as well as the get_flashed_messages() function.-->
+            <div id="content">{% block content %}Put content here{% endblock %}</div>
+            <div id="footer">
+                {% block footer %}
+                    <p>Made by Greg, <a href="https://github.com/GrzegorzKrug">Github</a>.</p>
+                {% endblock %}
+            </div>
+            <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+        </body>
+
+</html>
