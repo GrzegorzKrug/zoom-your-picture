@@ -2,13 +2,12 @@
 <html lang="en">
 
 <!--    <link rel="stylesheet" href="static/style.css">-->
-    <div class="navbar" id="myTopnav">
+    <div class="navbar" id="TopNavBar">
       <a href="/home" class="active">Home</a>
       <a href="{{ url_for('save')}}">New Image</a>
       <a href="{{ url_for('results')}}">Results</a>
 <!--      <a href="#contact">Contact</a>-->
       <a href="{{ url_for('about') }}">About</a>
-      test TEST, NEW
 <!--      <a href="javascript:void(0);" class="icon" onclick="myFunction()">-->
 <!--        <i class="fa fa-bars"></i>-->
 <!--          javascript-->
@@ -17,6 +16,7 @@
     <head>
         {% block style %}
             <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+            <link rel="stylesheet" href="{{ url_for('static', filename='styles/google-icons.css') }}">
         {% endblock %}
         <title>ZoomIt - {% block title %} Gif maker{% endblock %}</title>
         <meta charset="UTF-8">
