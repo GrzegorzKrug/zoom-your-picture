@@ -4,14 +4,8 @@
 <!--    <link rel="stylesheet" href="static/style.css">-->
     <div class="navbar" id="TopNavBar">
       <a href="/home" class="active">Home</a>
-      <a href="{{ url_for('save')}}">New Image</a>
-      <a href="{{ url_for('results')}}">Results</a>
-<!--      <a href="#contact">Contact</a>-->
+      <a href="{{ url_for('save')}}">New Zoom</a>
       <a href="{{ url_for('about') }}">About</a>
-<!--      <a href="javascript:void(0);" class="icon" onclick="myFunction()">-->
-<!--        <i class="fa fa-bars"></i>-->
-<!--          javascript-->
-<!--      </a>-->
     </div>
     <head>
         {% block style %}
@@ -24,7 +18,8 @@
 
     </head>
         <body>
-            <div id="content">
+            <div class="header">{% block header %}{% endblock %}</div>
+            <div class="content">
                 {% block content %}{% endblock %}
             </div>
             <div class="footer">
@@ -32,6 +27,6 @@
                     Made by Greg, <a href="https://github.com/GrzegorzKrug">Github</a>.
                 {% endblock %}
             </div>
-            <link rel="shortcut icon" href="{{ url_for('static', filename='icons/favicon.ico') }}">
+            <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
         </body>
 </html>

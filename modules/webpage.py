@@ -59,13 +59,13 @@ def error():
 def error_handler(error):
     return render_template("missing.html"), 404
 
-
-@app.route("/results")
-def results():
-    cook = request.cookies.get("name")
-    cook = str(cook)
-    render = render_template("render.html", content=cook)
-    return render
+#
+# @app.route("/results")
+# def results():
+#     cook = request.cookies.get("name")
+#     cook = str(cook)
+#     render = render_template("render.html", content=cook)
+#     return render
 
 
 @app.route("/save")
