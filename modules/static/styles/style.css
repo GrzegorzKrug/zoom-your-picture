@@ -42,8 +42,13 @@
     font-size: 2em;
 }
 
+:root {
+    --background-color: #FEFFF2;;
+    --navbar-color: #EEEFF2;
+}
+
 body{
-    background-color: #FEFFF2;
+    background-color: var(--background-color);
     font-family: Verdana, times;
     font-weight: 100;
     font-size: 1em;
@@ -86,7 +91,7 @@ content {
  color: #2F8FFF;
  font-size: 2.3em;
  font-family: 'OpenSans-BoldItalic', serif;
- background-color: #EEEFF2;
+ background-color: var(--navbar-color);
  text-transform: capitalize;
 
 }
@@ -96,13 +101,16 @@ content {
  font-size: 1em;
  margin-left: 3%;
  margin-right: 3%;
+ border-radius: 30px;
+ padding-left: 15px;
+ padding-right: 15px;
 }
 .navbar>a:hover{
 /*
  -webkit-text-stroke-width: 23px;
  -webkit-text-stroke-color: rgba(0, 180, 150, 0.2);
  */
-    text-shadow: 3px 2px 2px rgba(0, 130, 180, 0.9);
+    text-shadow: 3px 2px 2px rgba(0, 50, 90, 1);
     color: rgb(255,135,0);
 }
 
@@ -128,3 +136,44 @@ p {
     color: #2F8FAF;
     text-shadow: 2px 2px rgba(0, 0, 50, 0.9);
 }
+
+/* Main styles */
+
+.text {
+  fill: none;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-dasharray: $dash $dash-space;
+  stroke-dashoffset: 0;
+  -webkit-animation: stroke $time infinite linear;
+  animation: stroke $time infinite linear;
+
+  @for $item from 1 through $max {
+    &:nth-child(#{$max}n + #{$item}) {
+      $color: nth($colors, $item);
+      stroke: $color;
+      -webkit-animation-delay: -($time-step * $item);
+      animation-delay: -($time-step * $item);
+    }
+  }
+}
+
+
+@keyframes highlightlink {
+
+    10% {
+        background-color: rgb(150, 220, 255);
+    }
+    100% {
+        background-color: rgb(150, 220, 255);
+    }
+}
+
+.navbar>a:hover{
+    animation-name: highlightlink;
+    animation-duration: 15s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-timing-function: linear;
+}
+

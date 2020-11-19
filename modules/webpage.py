@@ -17,6 +17,11 @@ def home():
     return render_template("home.html")
 
 
+@app.route("/animation")
+def animation():
+    return render_template("anim.html")
+
+
 @app.route("/whois/<name>")
 @app.route("/whois/")
 def who(name=None):
@@ -58,6 +63,7 @@ def error():
 @app.errorhandler(404)
 def error_handler(error):
     return render_template("missing.html"), 404
+
 
 #
 # @app.route("/results")
