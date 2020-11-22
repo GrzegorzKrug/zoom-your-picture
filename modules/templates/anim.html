@@ -1,14 +1,17 @@
 {% extends "main.html" %}
+{% block style %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/animation.css') }}">
+{% endblock %}
+
+{% block header %}
+{% endblock %}
+
 {% block content %}
-<!--svg(viewBox="0 0 600 300")-->
-<!--  // Symbol-->
-<!--  symbol#s-text-->
-<!--    text(text-anchor="middle", x="50%", y="50%", dy=".35em")-->
-<!--      | Hello John.-->
-<!--  // Duplicate symbols-->
-<!--  use.text(xlink:href="#s-text")-->
-<!--  use.text(xlink:href="#s-text")-->
-<!--  use.text(xlink:href="#s-text")-->
-<!--  use.text(xlink:href="#s-text")-->
-<!--  use.text(xlink:href="#s-text")-->
+<svg width="600" height="200">
+    <text text-anchor="middle" x="50%" dy="1.7ex">
+      Hello John.
+    </text>
+</svg>
+
 {% endblock %}

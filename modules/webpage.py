@@ -1,10 +1,12 @@
 from flask import Flask
 from flask import redirect, url_for, abort, request
 from flask import render_template, make_response
+from flask_scss import Scss
 
 import time
 
 app = Flask(__name__)
+Scss(app)
 
 
 @app.route("/")
@@ -74,12 +76,10 @@ def error_handler(error):
 #     return render
 
 
-@app.route("/save")
-def save():
-    render = render_template("main.html")
-    resp = make_response(render)
-    resp.set_cookie("name", "greg")
-    return resp
+@app.route("/upload")
+def upload():
+    render = render_template("upload.html")
+    return render
 
 
 @app.route("/about")

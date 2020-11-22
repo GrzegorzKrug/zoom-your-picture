@@ -1,0 +1,44 @@
+:root {
+    --dash-colors: rgb(0, 0, 0) rgb(255, 255, 255);
+    --dash-size: 25;
+    --dash-gap-size: 2;
+    --duration: 3s;
+
+}
+
+
+svg {
+    fill: rgb(255,0,0);
+    font-family: Arial;
+    font-size: 3em;
+    height: 2ex;
+    font-weight: 800;
+}
+
+svg>text:hover{
+    fill: none;
+    stroke-width: 3px;
+    stroke-dasharray: var(--dash-size) var(--dash-gap-size);
+
+    animation: anim;
+    animation-duration: var(--duration);
+    animation-timing-function: linear;
+    animation-fill: both;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+
+@keyframes anim{
+    0% {
+        stroke: rgb(0, 50, 150);
+    }
+
+    90%, 100% {
+        stroke: rgb(255, 50, 20);
+        stroke-dasharray: var(--dash-size) 2;
+    }
+    100% {
+        stroke-dashoffset: 120;
+    }
+}
