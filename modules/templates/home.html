@@ -1,8 +1,21 @@
 {% extends "main.html" %}
 {% block title %} Home {% endblock %}
-{% block header %} Hello, this is home page.{% endblock %}
+{% block header %}{% endblock %}
 {% block content %}
-    <canvas id="canvas" height="200" width="200">
-        <script type="text/javascript" src="{{ url_for('static', filename='js/clock.js') }}"></script>
-    </canvas>
+<span>
+    <canvas id="canvas10h" height="250" width="250">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/clock10.js') }}"></script>
+</span>
+<span>
+    <canvas id="canvas12h" height="250" width="250">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/clock12.js') }}"></script>
+</span>
+<span>
+    <canvas id="canvas24h" height="250" width="250">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/clock24.js') }}"></script>
+</span>
+<span>
+    <canvas id="canvas8h" height="250" width="250">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/clock8.js') }}"></script>
+</span>
 {% endblock %}
