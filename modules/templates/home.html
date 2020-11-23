@@ -2,20 +2,25 @@
 {% block title %} Home {% endblock %}
 {% block header %}{% endblock %}
 {% block content %}
+
 <span>
-    <canvas id="canvas10h" height="250" width="250">
-        <script type="text/javascript" src="{{ url_for('static', filename='js/clock10.js') }}"></script>
-</span>
-<span>
+    <p>Clock 12h</p>
     <canvas id="canvas12h" height="250" width="250">
         <script type="text/javascript" src="{{ url_for('static', filename='js/clock12.js') }}"></script>
 </span>
 <span>
+    <p>Clock 24h</p>
     <canvas id="canvas24h" height="250" width="250">
         <script type="text/javascript" src="{{ url_for('static', filename='js/clock24.js') }}"></script>
 </span>
-<span>
+<container>
+    <p>Clock 8h</p>
     <canvas id="canvas8h" height="250" width="250">
         <script type="text/javascript" src="{{ url_for('static', filename='js/clock8.js') }}"></script>
-</span>
+</container>
+<container>
+    <p>Clock 10h</p>
+    <canvas id="canvas10h" height="250" width="250">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/clock10.js') }}"></script>
+</container>
 {% endblock %}

@@ -74,9 +74,9 @@ def error():
     abort(405)
 
 
-@app.route("/favicon.ico")
-def favicon():
-    return None  # url_for("static", filename="favicon.ico")
+# @app.route("/favicon.ico")
+# def favicon():
+#     return None  # url_for("static", filename="favicon.ico")
 
 
 @app.errorhandler(404)
