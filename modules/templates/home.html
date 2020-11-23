@@ -1,26 +1,39 @@
 {% extends "main.html" %}
+{% block style %}
+    {{ super() }}
+<style>
+    .clock-row{
+        display: flex;
+        justify-content: center;
+    }
+    .clock-row span{
+    width: 250px;
+    }
+</style>
+{% endblock %}
 {% block title %} Home {% endblock %}
 {% block header %}{% endblock %}
 {% block content %}
 
-<span>
-    <p>Clock 12h</p>
+
+<div class="clock-row">
     <canvas id="canvas12h" height="250" width="250">
         <script type="text/javascript" src="{{ url_for('static', filename='js/clock12.js') }}"></script>
-</span>
-<span>
-    <p>Clock 24h</p>
+    </canvas>
     <canvas id="canvas24h" height="250" width="250">
         <script type="text/javascript" src="{{ url_for('static', filename='js/clock24.js') }}"></script>
-</span>
-<container>
-    <p>Clock 8h</p>
+    </canvas>
     <canvas id="canvas8h" height="250" width="250">
         <script type="text/javascript" src="{{ url_for('static', filename='js/clock8.js') }}"></script>
-</container>
-<container>
-    <p>Clock 10h</p>
+    </canvas>
     <canvas id="canvas10h" height="250" width="250">
         <script type="text/javascript" src="{{ url_for('static', filename='js/clock10.js') }}"></script>
-</container>
+    </canvas>
+</div>
+<div class="clock-row">
+    <span>Clock 12</span>
+    <span>Clock 24</span>
+    <span>Clock 8</span>
+    <span>Clock 10</span>
+</div>
 {% endblock %}
