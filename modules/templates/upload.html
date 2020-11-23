@@ -2,8 +2,27 @@
 
 
 {% block header %}
-Upload your image.
+    {% if header_text %}
+        {{ header_text }}
+    {% else %}
+        Upload your image.
+    {% endif %}
 {% endblock %}
 
 {% block content %}
+<div class="container">
+
+  <form action='{{ url_for("process_image") }}' method="POST" enctype="multipart/form-data">
+    <div class="form-group">
+<!--      <div class="custom-file">-->
+        <input type="file" class="custom-file-input" name="upImage" id="upImage">
+<!--        <label class="custom-file-label" for="image">txt2.</label>-->
+<!--      </div>-->
+    </div>
+
+    <button type="submit" class="btn btn-primary">Confirm</button>
+
+  </form>
+
+</div>
 {% endblock %}

@@ -1,4 +1,8 @@
 {% extends "main.html" %}
 {% block title %} Home {% endblock %}
 {% block header %} Hello, this is home page.{% endblock %}
-{% block content %} Here will be last posts {% endblock %}
+{% block content %}
+    <canvas id="canvas" height="200" width="200">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/clock.js') }}"></script>
+    </canvas>
+{% endblock %}

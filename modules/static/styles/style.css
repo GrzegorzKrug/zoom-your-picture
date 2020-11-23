@@ -42,8 +42,6 @@
 .header, .content{
     text-align: center;
     color: rgb(0,0,60);
-    position: relative;
-    left: -30px;
     margin-top: 10px;
     margin-bottom: 10px;
     font-size: 2em;
