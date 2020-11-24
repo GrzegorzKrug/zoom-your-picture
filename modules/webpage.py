@@ -31,9 +31,14 @@ def home():
     return render_template("home.html")
 
 
-@app.route("/animation")
+@app.route("/animation/")
 def animation():
     return render_template("anim.html")
+
+
+@app.route("/clocks/")
+def clocks():
+    return render_template("clocks.html")
 
 
 @app.route("/whois/<name>")

@@ -1,0 +1,67 @@
+{% extends "main.html" %}
+{% block style %}
+    {{ super() }}
+<style>
+    .clock-row{
+        display: flex;
+        justify-content: center;
+    }
+    .clock-row span{
+    width: 250px;
+    }
+</style>
+{% endblock %}
+{% block title %} Clocks {% endblock %}
+{% block header %}{% endblock %}
+{% block content %}
+
+
+<div class="clock-row">
+    <canvas id="canvas12h" height="250" width="250">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/clock12.js') }}"></script>
+    </canvas>
+    <canvas id="canvas24h" height="250" width="250">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/clock24.js') }}"></script>
+    </canvas>
+    <canvas id="canvas8h" height="250" width="250">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/clock8.js') }}"></script>
+    </canvas>
+    <canvas id="canvas10h" height="250" width="250">
+        <script type="text/javascript" src="{{ url_for('static', filename='js/clock10.js') }}"></script>
+    </canvas>
+    <script>
+        var clockrad = 110;
+        var clockx = clockrad+15;
+        var clocky =  clockrad+15;
+
+        var plateColor = "rgb(230, 250, 255)";
+        var borderColor = "rgb(150, 160, 195)";
+        var plateLineColor = "rgb(0,50,50)";
+        var innerPlateLineColor = "rgb(40,50,0)";
+        var plateLineThickness = 5;
+        var borderSize = 15;
+
+        var bigLineColor = "rgb(255, 100, 120)";
+        var smallLineColor = "rgba(0, 0, 0, 0.6)";
+        var labelColor = "rgb(25, 80, 190)";
+
+        var arrowStickColor = "rgb(10, 25, 60)";
+        var arrowStickWidth = 3.5;
+        var arrowHeadLineWidth = 3.5;
+
+        var fastArrowColor = "rgb(0, 230, 255)";
+        var mediumArrowColor = "rgb(0,180,245)";
+        var slowArrowColor = "rgb(50, 140, 215)";
+
+        var fastArrowLenght = 70;
+        var mediumArrowLenght = 50;
+        var slowArrowLenght = 30;
+    </script>
+</div>
+<div class="clock-row">
+    <span>Clock 12</span>
+    <span>Clock 24</span>
+    <span>Clock 8</span>
+    <span>Clock 10</span>
+</div>
+{% endblock %}
