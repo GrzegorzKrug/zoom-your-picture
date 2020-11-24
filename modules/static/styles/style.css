@@ -44,7 +44,7 @@
     color: rgb(0,0,60);
     margin-top: 10px;
     margin-bottom: 10px;
-    font-size: 2em;
+    font-size: 1.5em;
 }
 
 body{
@@ -87,7 +87,7 @@ content {
  text-align: center;
  text-transform: capitalize;
 
- font-size: 2.3vw;
+ font-size: 2.3em;
  font-family: 'OpenSans-BoldItalic', serif;
 
  background-color: var(--navbar-color);
@@ -154,4 +154,3 @@ content {
         color: var(--navbar-color);  /* Light bck  */
     }
 }
-

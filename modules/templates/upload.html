@@ -1,5 +1,17 @@
 {% extends "main.html" %}
-
+{% block style %}
+    {{ super() }}
+    <style>
+        #submitBt {
+        visibility: hidden;
+        }
+        #validationTextField {
+        font-weight: 1000;
+        font-Family: Verdana;
+        text-shadow: 1px 1px rgb(0,0,0);
+        }
+    </style>
+{% endblock %}
 
 {% block header %}
     {% if header_text %}
@@ -12,15 +24,19 @@
 {% block content %}
 <div class="container">
 
-  <form action='{{ url_for("process_image") }}' method="POST" enctype="multipart/form-data">
+  <form action='{{ url_for("process_image") }}'
+        method="POST" enctype="multipart/form-data"
+        onchange="ValidateFileIfImage()"  >
     <div class="form-group">
-<!--      <div class="custom-file">-->
-        <input type="file" class="custom-file-input" name="upImage" id="upImage">
-<!--        <label class="custom-file-label" for="image">txt2.</label>-->
-<!--      </div>-->
+        <input type="file"
+               class="custom-file-input"
+               name="upImage"
+               id="upImage">
     </div>
-
-    <button type="submit" class="btn btn-primary">Confirm</button>
+      <script id="validateFile" src="{{ url_for('static', filename='js/validateFile.js') }}">
+      </script>
+    <p id="validationTextField"></p>
+    <button id="submitBt" type="submit" class="btn btn-primary">Confirm</button>
 
   </form>
 

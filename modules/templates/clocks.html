@@ -1,21 +1,33 @@
 {% extends "main.html" %}
 {% block style %}
     {{ super() }}
-<style>
-    .clock-row{
-        display: flex;
-        justify-content: center;
-    }
-    .clock-row span{
-    width: 250px;
-    }
-</style>
+    <style>
+        .clock-row{
+            display: flex;
+            justify-content: center;
+        }
+        .clock-row span{
+        width: 250px;
+        }
+    </style>
 {% endblock %}
+{% block header %}
+    {% if rate_error %}
+
+            <style>
+                .navbar {
+                display: none;
+                }
+
+            </style>
+            {{ rate_error }}
+    {% else %}
+    {% endif %}
+{% endblock %}
+
 {% block title %} Clocks {% endblock %}
-{% block header %}{% endblock %}
+
 {% block content %}
-
-
 <div class="clock-row">
     <canvas id="canvas12h" height="250" width="250">
         <script type="text/javascript" src="{{ url_for('static', filename='js/clock12.js') }}"></script>

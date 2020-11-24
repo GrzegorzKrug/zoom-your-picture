@@ -1,3 +1,7 @@
+from functools import wraps
+
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from flask import Flask
 from flask import redirect, url_for, abort, request
 from flask import render_template, make_response
@@ -10,11 +14,15 @@ import cv2
 import os
 
 app = Flask(__name__)
+limiter = Limiter(
+        default_limits=["30/minute"],
+        key_func=get_remote_address)
+limiter.init_app(app)
 
 app.config["IMAGE_DIRECTORY"] = os.path.abspath("incoming")
 os.makedirs(app.config['IMAGE_DIRECTORY'], exist_ok=True)
 
-app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["JPEG", "JPG", "PNG", "GIF"]
+app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["jpeg", "jpg", "png"]
 
 
 # app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -37,7 +45,11 @@ def animation():
 
 
 @app.route("/clocks/")
-def clocks():
+@limiter.exempt
+@app.errorhandler(429)
+def clocks(er=None):
+    if er:
+        return render_template("clocks.html", rate_error=er)
     return render_template("clocks.html")
 
 
@@ -95,12 +107,32 @@ def upload():
     return render
 
 
+def limit_content_length(max_length):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            cl = request.content_length
+            if cl is not None and cl > max_length:
+                abort(413)
+            return f(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 @app.route("/process_image", methods=["GET", "POST"])
+@limit_content_length(5 * 1024 * 1024)
+# @
 def process_image():
+    print("Starting process")
     if request.method == "GET":
         ret = redirect(url_for("upload"))
     elif request.method == "POST":
-        ret = _save_image()
+        try:
+            ret = _save_image()
+        except Exception:
+            ret = redirect(url_for("upload"))
     else:
         ret = redirect(url_for("upload"))
     return ret
@@ -110,15 +142,15 @@ def _save_image():
     image = request.files["upImage"]
     try:
         name, extension = str(image.filename).split(".")
-        if extension not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
+        print(f"name: {name}, extension: {extension}")
+        if extension.lower() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
             return render_template("upload.html", header_text="Invalid format, try again.")
         else:
-            print("valid")
-
+            return render_template("process.html")
     except Exception:
         abort(400)
 
-    image.save(os.path.join(app.config["IMAGE_DIRECTORY"], str(int(time.time() * 100)) + f".{extension}"))
+    # image.save(os.path.join(app.config["IMAGE_DIRECTORY"], str(int(time.time() * 100)) + f".{extension}"))
 
 
 @app.route("/about")
