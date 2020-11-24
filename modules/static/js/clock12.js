@@ -145,10 +145,11 @@ var slowArrowLenght = 40;
       fullrange = 60;
       plates = 12;
       spacing = fullrange/plates;
+      bd = borderSize/2+plateLineThickness/2
 
       for(i=1;i<=fullrange;i++){
-        posx = clockx + Math.sin(-i/fullrange*2*Math.PI+Math.PI)*(clockrad-bd-13-10)
-        posy = clocky + Math.cos(i/fullrange*2*Math.PI+Math.PI)*(clockrad-bd-13-10)+8
+        posx = clockx + Math.sin(-i/fullrange*2*Math.PI+Math.PI)*(clockrad-bd-13-12)
+        posy = clocky + Math.cos(i/fullrange*2*Math.PI+Math.PI)*(clockrad-bd-13-12)+8
         if ((i%spacing) == 0){
           ctx.fillText(i/spacing, posx, posy);
           lindist = 13
@@ -161,7 +162,7 @@ var slowArrowLenght = 40;
           ctx.strokeStyle = smallLineColor;
         }
         ctx.beginPath();
-        bd = borderSize/2+plateLineThickness/2
+
 
         startx = clockx + Math.sin(-i/fullrange*2*Math.PI+Math.PI)*(clockrad-bd)
         starty = clocky + Math.cos(i/fullrange*2*Math.PI+Math.PI)*(clockrad-bd)
