@@ -12,17 +12,15 @@
     </style>
 {% endblock %}
 {% block header %}
-    {% if rate_error %}
-
+    {% if hide_navbar %}
             <style>
                 .navbar {
                 display: none;
                 }
 
             </style>
-            {{ rate_error }}
-    {% else %}
     {% endif %}
+    {{ rate_error }}
 {% endblock %}
 
 {% block title %} Clocks {% endblock %}

@@ -24,6 +24,8 @@ os.makedirs(app.config['IMAGE_DIRECTORY'], exist_ok=True)
 
 app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["jpeg", "jpg", "png"]
 
+"===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== "
+
 
 # app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 # Scss(app)
@@ -48,52 +50,11 @@ def animation():
 @limiter.exempt
 @app.errorhandler(429)
 def clocks(er=None):
+    was_uploading = r"process_image" in request.endpoint
+    print(f"upload: {was_uploading}")
     if er:
-        return render_template("clocks.html", rate_error=er)
+        return render_template("clocks.html", rate_error=er, hide_navbar=not was_uploading)
     return render_template("clocks.html")
-
-
-@app.route("/whois/<name>")
-@app.route("/whois/")
-def who(name=None):
-    if name:
-        if name.lower() == "greg":
-            text = "Greg is author of this page"
-        else:
-            text = f"I do not know {name}"
-    else:
-        text = "Is this a person?"
-    return text
-
-
-@app.route("/args/")
-@app.route("/args/<name>")
-def args(name=None):
-    if not name:
-        temp = request.args.get("name")
-        if temp:
-            name = temp
-        else:
-            name = "No name was provided."
-    return name
-
-
-@app.route("/picture", methods=["GET", "POST"])
-def picture():
-    if request.method == "GET":
-        return "Getting image\n"
-    else:
-        return "None\n"
-
-
-@app.route("/error")
-def error():
-    abort(405)
-
-
-# @app.route("/favicon.ico")
-# def favicon():
-#     return None  # url_for("static", filename="favicon.ico")
 
 
 @app.errorhandler(404)
@@ -101,9 +62,9 @@ def error_handler(error):
     return render_template("missing.html"), 404
 
 
-@app.route("/upload", methods=["GET"])
-def upload():
-    render = render_template("upload.html")
+@app.route("/newgif", methods=["GET"])
+def new_gif():
+    render = render_template("upload_gif_form.html")
     return render
 
 
@@ -123,18 +84,18 @@ def limit_content_length(max_length):
 
 @app.route("/process_image", methods=["GET", "POST"])
 @limit_content_length(5 * 1024 * 1024)
-# @
+@limiter.limit("3/5minute")
 def process_image():
     print("Starting process")
     if request.method == "GET":
-        ret = redirect(url_for("upload"))
+        ret = redirect(url_for("newGif"))
     elif request.method == "POST":
         try:
             ret = _save_image()
         except Exception:
-            ret = redirect(url_for("upload"))
+            ret = redirect(url_for("newGif"))
     else:
-        ret = redirect(url_for("upload"))
+        ret = redirect(url_for("newGif"))
     return ret
 
 
@@ -144,7 +105,7 @@ def _save_image():
         name, extension = str(image.filename).split(".")
         print(f"name: {name}, extension: {extension}")
         if extension.lower() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
-            return render_template("upload.html", header_text="Invalid format, try again.")
+            return render_template("upload_gif_form.html", header_text="Invalid format, try again.")
         else:
             return render_template("process.html")
     except Exception:
