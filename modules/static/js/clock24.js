@@ -1,6 +1,7 @@
 var clockrad = 110;
 var clockx = clockrad+15;
 var clocky =  clockrad+15;
+var timezoneOffset = 0;
 
 var plateColor = "rgb(235, 235, 255)";
 var borderColor = "rgb(150, 160, 195)";
@@ -35,7 +36,7 @@ var slowArrowLenght = 30;
 
     function get_24_time(){
       var d = new Date();
-      var n = d.getTime();
+      var n = d.getTime() + timezoneOffset;
       whole_day = 60*60*24;
       cur_time = (n/1000) % whole_day;
 

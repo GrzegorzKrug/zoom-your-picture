@@ -6,4 +6,15 @@ Processing
 {% endblock %}
 
 {% block content %}
+{% if token %}
+    <h4>{{token}}</h4>
+{% endif %}
+{% if tokens %}
+<script>
+    tokens = {{ tokens|tojson }}
+    for (tk of tokens){
+    document.write(tk+"<br>");
+    }
+</script>
+{% endif %}
 {% endblock %}

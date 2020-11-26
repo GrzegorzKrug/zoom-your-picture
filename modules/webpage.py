@@ -9,6 +9,8 @@ from flask import render_template, make_response
 # from flask_scss import Scss
 
 import numpy as np
+import hashlib
+import pickle
 import time
 import cv2
 import os
@@ -84,19 +86,35 @@ def limit_content_length(max_length):
 
 @app.route("/process_image", methods=["GET", "POST"])
 @limit_content_length(5 * 1024 * 1024)
-@limiter.limit("3/5minute")
-def process_image():
-    print("Starting process")
+@limiter.limit("155/5minute")
+def validate_image():
     if request.method == "GET":
-        ret = redirect(url_for("newGif"))
+        ret = redirect(url_for("new_gif"))
     elif request.method == "POST":
-        try:
-            ret = _save_image()
-        except Exception:
-            ret = redirect(url_for("newGif"))
+        ret = process_image()
     else:
-        ret = redirect(url_for("newGif"))
+        ret = redirect(url_for("new_gif"))
     return ret
+
+
+def process_image():
+    enter = f"{np.random.random(100)}"
+    secr = f"{enter}-{time.time()}".encode()
+    ah = hashlib.sha1(secr)
+    new_token = ah.hexdigest()
+    # prev_tokens = request.cookies.get("all_tokens", None)
+    # if prev_tokens:
+    #     print(f"prev: {prev_tokens}")
+    #     prev_tokens = pickle.loads(prev_tokens.encode())
+    # else:
+    #     prev_tokens = []
+
+
+    # all_tokens = prev_tokens + [token]
+    rend = make_response(render_template("process.html", token=new_token))
+    # encod = pickle.dumps(all_tokens)
+    # rend.set_cookie("all_tokens", encod, max_age=12 * 30)
+    return rend
 
 
 def _save_image():
