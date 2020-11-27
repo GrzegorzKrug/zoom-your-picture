@@ -1,0 +1,15 @@
+FROM python:3.8.5
+ENV PYTHONUNBUFFERED 1
+
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+RUN apt-get update
+RUN apt-get install 'ffmpeg'\
+    'libsm6'\
+    'libxext6'  -y
+
+RUN mkdir app
+WORKDIR /app
+COPY . ./
+RUN ls
+RUN pip install -r requirements.txt
+CMD echo "Add command to run some service"

@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  server:
+    image: zoomgif:3.8.5
+    build:
+      context: ./modules
+      dockerfile: DOCKERFILE_SERVER
+    ports:
+      - "5020:5000"
+    volumes:
+      - ./modules:/app
+    command: "python webpage.py"
+    restart: always
+  worker:
+    image: zoomgif:3.8.5
+    volumes:
+      - ./modules:/app
+    command: bash -c "cd backend & celery -A backend worker --loglevel=info --autoscale=2,1"
+    depends_on: 
+      - broker
+    restart: always
+  broker:
+    image: rabbitmq:3.8.5-management
+    command: "echo I am broker"
+    hostname: broker
+    restart: on-failure
