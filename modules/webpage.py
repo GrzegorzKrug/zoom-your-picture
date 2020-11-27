@@ -5,8 +5,10 @@ from flask_limiter.util import get_remote_address
 from flask import Flask
 from flask import redirect, url_for, abort, request
 from flask import render_template, make_response
-
 # from flask_scss import Scss
+
+from backend.tasks import create_zoomgif
+from backend.celery import app as celery_app
 
 import numpy as np
 import hashlib
@@ -22,6 +24,8 @@ limiter = Limiter(
 limiter.init_app(app)
 
 app.config["IMAGE_DIRECTORY"] = os.path.abspath("incoming")
+app.config["RESOURCE_DIRECTORY"] = os.path.abspath("static/outputgifs")
+
 os.makedirs(app.config['IMAGE_DIRECTORY'], exist_ok=True)
 
 app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["jpeg", "jpg", "png"]
@@ -60,8 +64,11 @@ def clocks(er=None):
 
 
 @app.errorhandler(404)
+@app.errorhandler(400)
 def error_handler(error):
-    return render_template("missing.html"), 404
+    print(error)
+    errorCode = error.code
+    return render_template("error.html", error=error, errorCode=errorCode), errorCode
 
 
 @app.route("/newgif", methods=["GET"])
@@ -86,7 +93,7 @@ def limit_content_length(max_length):
 
 @app.route("/process_image", methods=["GET", "POST"])
 @limit_content_length(5 * 1024 * 1024)
-@limiter.limit("155/5minute")
+@limiter.limit("10/5minute")
 def validate_image():
     if request.method == "GET":
         ret = redirect(url_for("new_gif"))
@@ -98,10 +105,24 @@ def validate_image():
 
 
 def process_image():
+    print(f"Processing POST")
     enter = f"{np.random.random(100)}"
     secr = f"{enter}-{time.time()}".encode()
     ah = hashlib.sha1(secr)
     new_token = ah.hexdigest()
+    jobtoken = f"{int(time.time())}-{new_token}"
+
+    valid = _save_image(jobtoken)
+    if valid:
+        print(f"Image was accepted")
+        res = create_zoomgif.delay(jobtoken, 150, 500)
+        jobid = res.id
+
+        result_url = url_for("gif", token=jobtoken, jobid=jobid)
+        response = make_response(render_template("process.html", url=result_url, token=jobtoken))
+    else:
+        response = make_response(render_template("process.html"))
+        return response
     # prev_tokens = request.cookies.get("all_tokens", None)
     # if prev_tokens:
     #     print(f"prev: {prev_tokens}")
@@ -109,27 +130,136 @@ def process_image():
     # else:
     #     prev_tokens = []
 
-
     # all_tokens = prev_tokens + [token]
-    rend = make_response(render_template("process.html", token=new_token))
+
     # encod = pickle.dumps(all_tokens)
     # rend.set_cookie("all_tokens", encod, max_age=12 * 30)
-    return rend
+    return response
+    # return render_template("upload_gif_form.html", header_text="Invalid format, try again.")
 
 
-def _save_image():
+def _save_image(dest_name):
+    print(f"jobname: {dest_name}")
     image = request.files["upImage"]
+    imbytes = request.files['upImage'].read()
+    # bytesLike = BytesIO(imstr)
+
     try:
+        npimg = np.frombuffer(imbytes, np.uint8)
+        npimg = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+
         name, extension = str(image.filename).split(".")
-        print(f"name: {name}, extension: {extension}")
+        # print(f"name: {name}, extension: {extension}")
+        outname = f"{dest_name}.png"
+        outpath = os.path.join(app.config['IMAGE_DIRECTORY'], outname)
+
         if extension.lower() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
-            return render_template("upload_gif_form.html", header_text="Invalid format, try again.")
+            return False
+        print(f"Saving image: {outpath}")
+        cv2.imwrite(outpath, npimg)
+        return True
+
+    except Exception as err:
+        print(f"Error when saving image: {err}")
+        return False
+
+
+@app.route("/gif/<token>/<jobid>", methods=["GET"])
+@app.route("/gif/<token>/", methods=["GET"])
+def gif(token=None, jobid=None):
+    print(f"Checking gif, token: {token}, jobid: {jobid}")
+    imgPath = os.path.join(app.config['RESOURCE_DIRECTORY'], f"{token}.gif")
+    isImage = os.path.isfile(imgPath)
+    avg_time = 3
+    url = url_for("static", filename=f"outputgifs/{token}.gif")
+    if isImage:
+        return render_template("process_results.html", imgPath=url)
+    elif jobid:
+        isProc, isQue, quePos = find_job_in_celery(jobid)
+        if isProc:
+            text = "Your image is currently processed"
+        elif isQue:
+            text = f"Your image is in queue, position: {quePos}. Estimated: {quePos * avg_time} min"
+        elif quePos >= 9:
+            text = f"Your image is in queue, position: 10+"
         else:
-            return render_template("process.html")
-    except Exception:
+            text = "Image is missing. Is this valid request?"
+
+        return render_template("process_results.html", workStatus=text)
+    else:
         abort(400)
 
-    # image.save(os.path.join(app.config["IMAGE_DIRECTORY"], str(int(time.time() * 100)) + f".{extension}"))
+
+def find_job_in_celery(jobid):
+    i = celery_app.control.inspect()
+    reg = list(i.registered().keys())[0]
+    print(f"regname: {reg}")
+    i = celery_app.control.inspect([reg])
+
+    queue = 0
+    is_processed = False
+    is_inQueue = False
+
+    # # print(f"Celery name: {dir(celery_app)}")
+    # # print(f"Celery name: {dir(celery_app.WorkController)}")
+    # # print(f"Celery name: {celery_app.WorkController}")
+    # query = i.query_task(jobid)
+    # actq = i.active_queues()
+    # # reg = i.registered()
+    # # regtk = i.registered_tasks()
+    # print(f"\n {'==' * 30}" * 3)
+    # print(f"query: {query}")
+    # print(f"actqu: {actq}")
+    # # print(f"reg: {reg}")
+    # # print(f"regtk: {regtk}")
+
+    act = i.active()
+    try:
+        print(f"que1: {len(act)}")
+        for key, val in act.items():
+            this_id = val[0]['id']
+            if this_id == jobid:
+                is_processed = True
+                break
+    except Exception as err:
+        print(f"JOB FIND ERROR1: {err}")
+        is_processed = False
+
+    try:
+        que = i.reserved()
+        # print(f"que2: {len(que)}")
+        if not is_processed:
+            if que:
+                for key, job_list in que.items():
+                    if is_inQueue:
+                        break
+                    for job in job_list:
+                        queue += 1
+                        this_id = job['id']
+                        if this_id == jobid:
+                            is_inQueue = True
+                            break
+    except Exception as err:
+        print(f"JOB FIND ERROR2: {err}")
+    # try:
+    #     sch = i.scheduled()
+    #     if not (is_processed or is_inQueue):
+    #         if sch:
+    #             print(f"que3: {len(sch)}")
+    #             for key, val in sch.items():
+    #                 queue += 1
+    #                 this_id = val[0]['id']
+    #                 if this_id == jobid:
+    #                     is_inQueue = True
+    #                     break
+    # except Exception as err:
+    #     print(f"JOB FIND ERROR3: {err}")
+
+    print("act:", act)
+    print("que:", que)
+    # print("sch:", sch)
+    print(f"PRoc: {is_processed}, isque: {is_inQueue}, que: {queue}")
+    return is_processed, is_inQueue, queue
 
 
 @app.route("/about")

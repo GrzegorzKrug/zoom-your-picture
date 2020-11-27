@@ -1,20 +1,23 @@
 {% extends "main.html" %}
 
 
-{% block header %}
+{% block title %}
 Processing
 {% endblock %}
 
 {% block content %}
-{% if token %}
-    <h4>{{token}}</h4>
+
+{% if url %}
+<h2><p><a href="{{ url }}"> Here is link to your gif.</a></p></h2>
+Average processing time: ~ 3mins.
+<!--<script>-->
+<!--    tokens = {{ token|tojson }}-->
+<!--    for (tk of tokens){-->
+<!--    document.write(tk+"<br>");-->
+<!--    }-->
+<!--</script>-->
+{% else %}
+Sorry, your request has been rejected.
 {% endif %}
-{% if tokens %}
-<script>
-    tokens = {{ tokens|tojson }}
-    for (tk of tokens){
-    document.write(tk+"<br>");
-    }
-</script>
-{% endif %}
+
 {% endblock %}

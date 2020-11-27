@@ -1,0 +1,14 @@
+{% extends "main.html" %}
+
+
+{% block title %}
+    Result page
+{% endblock %}
+{% block content %}
+
+    {% if imgPath %}
+    <img src="{{ imgPath }}">
+    {% elif workStatus %}
+    {{ workStatus }}
+{% endif %}
+{% endblock %}

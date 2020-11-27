@@ -46,6 +46,9 @@
     margin-bottom: 10px;
     font-size: 1.5em;
 }
+.content{
+    font-size: 1.2em;
+}
 
 body{
     background-color: var(--background-color);
