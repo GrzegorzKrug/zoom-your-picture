@@ -170,6 +170,7 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
             (h * AVATAR_SIZE // PIXEL_RATIO, w * AVATAR_SIZE // PIXEL_RATIO, 3),
             dtype=np.uint8
     )
+    target_hls = cv2.cvtColor(target, cv2.COLOR_BGR2HLS)
 
     pool = Pool(4)
     loop_range = len(range(0, h, PIXEL_RATIO))
@@ -185,10 +186,11 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
             # if USE_HSV:
             #     curr_target_color = target_hsv[target_slice]
             # else:
-            curr_target_color = target[target_slice]
-            hls_img = cv2.cvtColor(curr_target_color, cv2.COLOR_BGR2HLS)
-            blue, green, red = np.mean(curr_target_color, axis=0).mean(axis=0)
-            hue, light, sat = np.mean(hls_img, axis=0).mean(axis=0)
+            curr_target_bgr = target[target_slice]
+            curr_target_hls = target_hls[target_slice]
+
+            blue, green, red = np.mean(curr_target_bgr, axis=0).mean(axis=0)
+            hue, light, sat = np.mean(curr_target_hls, axis=0).mean(axis=0)
             args = blue, green, red, hue, light, sat, palette
             iter_like_orders.append(args)
             # results.append(find_closes_image(args))
@@ -223,7 +225,7 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
                         print(f"{err}")
         timeend = time.time()
         duration = timeend - time0
-        # print(f"{row_num:>3} of {loop_range} was executed in: {duration:>4.1f}s")
+        print(f"{row_num:>3} of {loop_range} was executed in: {duration:>4.1f}s")
     return output
 
 
