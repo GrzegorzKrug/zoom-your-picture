@@ -115,10 +115,12 @@ def process_image():
     valid = _save_image(jobtoken)
     if valid:
         print(f"Image was accepted")
-        res = create_zoomgif.delay(jobtoken, 150, 500)
+        power = 150
+        output_max_size = 500
+        res = create_zoomgif.delay(jobtoken, power, output_max_size)
         jobid = res.id
 
-        result_url = url_for("gif", token=jobtoken, jobid=jobid)
+        # result_url = url_for("gif", token=jobtoken, jobid=jobid)
         # response = make_response(render_template("process.html", url=result_url, token=jobtoken))
         response = redirect(url_for("gif", token=jobtoken, jobid=jobid))
     else:

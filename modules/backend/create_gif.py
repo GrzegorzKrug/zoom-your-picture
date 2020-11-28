@@ -39,37 +39,13 @@ def find_closes_image(arguments):
     error = 255 ** 2
     best = None
     for path, inner_dict in palette.items():
-        red, green, blue = inner_dict['r'], inner_dict['g'], inner_dict['g']
+        red, green, blue = inner_dict['r'], inner_dict['g'], inner_dict['b']
         hue, light, sat = inner_dict['hue'], inner_dict['light'], inner_dict['sat']
-        "21"
-        # cur_error = abs(targ_blue - blue) * 6 \
-        #             + abs(targ_green - green) * 6 \
-        #             + abs(targ_red - red) * 6 \
-        #             + abs(targ_hue - hue) * 3 \
-        #             + abs(targ_ligth - light) \
-        #             + abs(targ_sat - sat)
-        "24"
-        # cur_error = abs(targ_blue - blue) * 3 \
-        #             + abs(targ_green - green) * 3 \
-        #             + abs(targ_red - red) * 3 \
-        #             + abs(targ_hue - hue) \
-        #             + abs(targ_ligth - light) \
-        #             + abs(targ_sat - sat)
-        # "25"
-        # cur_error = abs(targ_blue - blue) * 5 \
-        #             + abs(targ_green - green) * 5 \
-        #             + abs(targ_red - red) * 5 \
-        #             + abs(targ_hue - hue) * 3 \
-        #             + abs(targ_ligth - light) \
-        #             + abs(targ_sat - sat)
-        "26"
-        cur_error = abs(targ_blue - blue) * 8 \
-                    + abs(targ_green - green) * 8 \
-                    + abs(targ_red - red) * 8 \
-                    + abs(targ_hue - hue) * 2 \
-                    + abs(targ_ligth - light) \
-                    + abs(targ_sat - sat)
 
+        cur_error = abs(targ_blue - blue) ** 2 \
+                    + abs(targ_green - green) ** 2 \
+                    + abs(targ_red - red) ** 2 \
+                    + abs(targ_hue - hue) * 2
         if cur_error < error:
 
             error = cur_error
@@ -175,17 +151,13 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
     pool = Pool(4)
     loop_range = len(range(0, h, PIXEL_RATIO))
     for row_num, cur_row in enumerate(range(0, h, PIXEL_RATIO)):
-
         time0 = time.time()
+
         "Make Queue"
         iter_like_orders = []
-        # results = []
         for col_num, cur_col in enumerate(range(0, w, PIXEL_RATIO)):
             target_slice = slice(cur_row, cur_row + PIXEL_RATIO), slice(cur_col, cur_col + PIXEL_RATIO)
 
-            # if USE_HSV:
-            #     curr_target_color = target_hsv[target_slice]
-            # else:
             curr_target_bgr = target[target_slice]
             curr_target_hls = target_hls[target_slice]
 
@@ -193,7 +165,6 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
             hue, light, sat = np.mean(curr_target_hls, axis=0).mean(axis=0)
             args = blue, green, red, hue, light, sat, palette
             iter_like_orders.append(args)
-            # results.append(find_closes_image(args))
 
         results = pool.map(find_closes_image, iter_like_orders)
 
@@ -227,21 +198,6 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
         duration = timeend - time0
         print(f"{row_num:>3} of {loop_range} was executed in: {duration:>4.1f}s")
     return output
-
-
-# def _(img_path):
-#     image = cv2.imread(img_path, cv2.IMREAD_COLOR)
-#     h, w, c = image.shape
-#     if h < w:
-#         w = h
-#     elif w < h:
-#         h = w
-#     else:
-#         print(f"Images shape is the same, not editing: {img_path}")
-#         return None
-#     new_img = image[0:h, 0:w, :]
-#     cv2.imwrite(img_path, new_img)
-#     return new_img
 
 
 def scale_image_to_max_dim(image, max_val):
@@ -374,7 +330,7 @@ def select_palette(all_palettes, selection=None):
             palette.update({**c})
 
     else:
-        palette = random.choice(all_palettes.values())
+        palette = random.choice(list(all_palettes.values()))
     print(f"Palette size: {len(palette)}")
     return palette
 
@@ -408,7 +364,7 @@ def start_job(src_path, output_path, power, output_size=None):
     print(f"paldir: {PAL_DIR}")
     print(f"palpat: {PAL_PATH}")
 
-    make_mozaic_and_gif(src_path, output_path, selection=["face"], config=config)
+    make_mozaic_and_gif(src_path, output_path, selection=['mess'], config=config)
 
 
 "Consts"
