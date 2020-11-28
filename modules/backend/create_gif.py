@@ -31,13 +31,45 @@ def time_it_dec(func):
 
 
 def find_closes_image(arguments):
-    targ_blue, targ_green, targ_red, palette = arguments
+    (
+            targ_blue, targ_green, targ_red,
+            targ_hue, targ_ligth, targ_sat,
+            palette
+    ) = arguments
     error = 255 ** 2
     best = None
     for path, inner_dict in palette.items():
         red, green, blue = inner_dict['r'], inner_dict['g'], inner_dict['g']
-        # cur_error = (targ_blue - blue) ** 2 + (targ_green - green) ** 2 + (targ_red - red) ** 2  # squared error
-        cur_error = abs(targ_blue - blue) + abs(targ_green - green) + abs(targ_red - red)
+        hue, light, sat = inner_dict['hue'], inner_dict['light'], inner_dict['sat']
+        "21"
+        # cur_error = abs(targ_blue - blue) * 6 \
+        #             + abs(targ_green - green) * 6 \
+        #             + abs(targ_red - red) * 6 \
+        #             + abs(targ_hue - hue) * 3 \
+        #             + abs(targ_ligth - light) \
+        #             + abs(targ_sat - sat)
+        "24"
+        # cur_error = abs(targ_blue - blue) * 3 \
+        #             + abs(targ_green - green) * 3 \
+        #             + abs(targ_red - red) * 3 \
+        #             + abs(targ_hue - hue) \
+        #             + abs(targ_ligth - light) \
+        #             + abs(targ_sat - sat)
+        # "25"
+        # cur_error = abs(targ_blue - blue) * 5 \
+        #             + abs(targ_green - green) * 5 \
+        #             + abs(targ_red - red) * 5 \
+        #             + abs(targ_hue - hue) * 3 \
+        #             + abs(targ_ligth - light) \
+        #             + abs(targ_sat - sat)
+        "26"
+        cur_error = abs(targ_blue - blue) * 8 \
+                    + abs(targ_green - green) * 8 \
+                    + abs(targ_red - red) * 8 \
+                    + abs(targ_hue - hue) * 2 \
+                    + abs(targ_ligth - light) \
+                    + abs(targ_sat - sat)
+
         if cur_error < error:
 
             error = cur_error
@@ -67,21 +99,12 @@ def make_gif(image, config, cx=None, cy=None, ):
     PROC_POWER = config['power']
 
     FRAMES = 500
-    name = "gif_zoom"
     height, width, _ = image.shape
     origin_x = width // 2
     origin_y = height // 2
-    frame = scale_image_to_max_dim(image, OUTPUT_GIF_MAX_SIZE)
-    out_height, out_width, _ = frame.shape
-    # if height != width:
-    #     if height > width:
-    #         origin_width = 50
-    #         origin_height = int(height / (width / 50))
-    #     else:
-    #         origin_width = int(width / (height / 50))
-    #         origin_height = 50
-    #
-    # else:
+    temp_frame = scale_image_to_max_dim(image, OUTPUT_GIF_MAX_SIZE)
+    out_height, out_width, _ = temp_frame.shape  # Keep aspect ratio
+
     origin_width = out_width
     origin_height = out_height
 
@@ -102,7 +125,7 @@ def make_gif(image, config, cx=None, cy=None, ):
 
     frame = image[roi_slice]
     frame = scale_image_to_max_dim(frame, OUTPUT_GIF_MAX_SIZE)
-
+    print(f"First frame dims: {frame.shape}")
     pil_image = image_array_to_pillow(frame)
 
     framerate = 1 / 120
@@ -116,13 +139,12 @@ def make_gif(image, config, cx=None, cy=None, ):
         y = int(round(y))
         w = int(round(w))
         h = int(round(h))
+
         # print(f"Frame: {fr}: xy {x} - {y}, w:{w}, h:{h}")
         roi_slice = slice(y, y + h), slice(x, x + w), slice(None)
-        # print("roi slice:", roi_slice)
         roi = image[roi_slice]
-
-        # frame = scale_image_to_max_dim(roi, OUTPUT_GIF_MAX_SIZE)  # sometimes is missing 1 pixel width/height
-        frame = cv2.resize(roi, (out_width, out_height))
+        frame = imutils.resize(roi, width=out_width, height=out_height)
+        frame = cv2.resize(frame, (out_width, out_height), interpolation=cv2.INTER_CUBIC)
         pil_image = image_array_to_pillow(frame)
         frames_list.append(pil_image)
 
@@ -164,9 +186,10 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
             #     curr_target_color = target_hsv[target_slice]
             # else:
             curr_target_color = target[target_slice]
-
+            hls_img = cv2.cvtColor(curr_target_color, cv2.COLOR_BGR2HLS)
             blue, green, red = np.mean(curr_target_color, axis=0).mean(axis=0)
-            args = blue, green, red, palette
+            hue, light, sat = np.mean(hls_img, axis=0).mean(axis=0)
+            args = blue, green, red, hue, light, sat, palette
             iter_like_orders.append(args)
             # results.append(find_closes_image(args))
 
@@ -318,18 +341,24 @@ def create_palette(dir_path):
 
         height, width, channels = image.shape
         image = imutils.resize(image, width=AVATAR_SIZE)
+
         if height < AVATAR_SIZE or width < AVATAR_SIZE:
             print(f"This image is too small: {height:>4}, {width:>4} - {image_path}")
             continue
         elif height != width:
             print(f"This image is not squared: {height:>4}, {width:>4} - {image_path}")
             image = make_stamp_square(image_path)
+        hls_img = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
 
         blue, green, red = np.mean(image, axis=0).mean(axis=0)
+        hue, light, sat = np.mean(hls_img, axis=0).mean(axis=0)
         rel_dir = re.sub(r"^.*palette" + f"{os.path.sep}", "", image_path)
         # print(rel_dir)
 
-        palette[rel_dir] = {"r": red, "g": green, "b": blue}
+        palette[rel_dir] = {
+                "r": red, "g": green, "b": blue,
+                "hue": hue, "sat": sat, "light": light,
+        }
     print(f"Palette size: {len(palette.keys())}")
     return palette
 
@@ -388,5 +417,5 @@ FILL_BORDER_WHEN_CROP = True
 if __name__ == "__main__":
     srcpath = os.path.join("..", "incoming", "1606510065-bc7d94d1eac40f19f736c5852ca4919ba7c49b39.png")
     outpath = os.path.join("..", "outputgifs", "1606510065-bc7d94d1eac40f19f736c5852ca4919ba7c49b39.gif")
-    start_job(srcpath, outpath, 50, 500)
-    # recreate_all_palettes()
+    # start_job(srcpath, outpath, 50, 500)
+    recreate_all_palettes()

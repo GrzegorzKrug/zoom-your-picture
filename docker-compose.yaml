@@ -21,6 +21,7 @@ services:
     command: bash -c "cd backend & celery -A backend worker --loglevel=info -P threads --autoscale=2,2"
     depends_on:
       - broker
+      - server
     restart: always
     environment:
       - HOSTNAME=broker

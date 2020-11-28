@@ -119,7 +119,8 @@ def process_image():
         jobid = res.id
 
         result_url = url_for("gif", token=jobtoken, jobid=jobid)
-        response = make_response(render_template("process.html", url=result_url, token=jobtoken))
+        # response = make_response(render_template("process.html", url=result_url, token=jobtoken))
+        response = redirect(url_for("gif", token=jobtoken, jobid=jobid))
     else:
         response = make_response(render_template("process.html"))
         return response
@@ -166,6 +167,7 @@ def _save_image(dest_name):
 
 @app.route("/gif/<token>/<jobid>", methods=["GET"])
 @app.route("/gif/<token>/", methods=["GET"])
+@limiter.exempt
 def gif(token=None, jobid=None):
     print(f"Checking gif, token: {token}, jobid: {jobid}")
     imgPath = os.path.join(app.config['RESOURCE_DIRECTORY'], f"{token}.gif")
@@ -175,15 +177,19 @@ def gif(token=None, jobid=None):
     if isImage:
         return render_template("process_results.html", imgPath=url)
     elif jobid:
-        isProc, isQue, quePos = find_job_in_celery(jobid)
-        if isProc:
-            text = "Your image is currently processed"
-        elif isQue:
-            text = f"Your image is in queue, position: {quePos}. Estimated: {quePos * avg_time} min"
-        elif quePos >= 9:
-            text = f"Your image is in queue, position: 10+"
-        else:
-            text = "Image is missing. Is this valid request?"
+        try:
+            isProc, isQue, quePos = find_job_in_celery(jobid)
+            if isProc:
+                text = "Your image is currently processed"
+            elif isQue:
+                text = f"Your image is in queue, position: {quePos}. Estimated: {quePos * avg_time} min"
+            elif quePos >= 9:
+                text = f"Your image is in queue, position: 10+"
+            else:
+                text = "Image is missing. Is this valid request?"
+        except Exception as err:
+            pass
+            text = "Error when checking que."
 
         return render_template("process_results.html", workStatus=text)
     else:
@@ -215,12 +221,15 @@ def find_job_in_celery(jobid):
 
     act = i.active()
     try:
-        print(f"que1: {len(act)}")
+        # print(f"que1: {len(act)}")
         for key, val in act.items():
-            this_id = val[0]['id']
-            if this_id == jobid:
-                is_processed = True
+            if is_processed:
                 break
+            for worker in val:
+                this_id = worker['id']
+                if this_id == jobid:
+                    is_processed = True
+                    break
     except Exception as err:
         print(f"JOB FIND ERROR1: {err}")
         is_processed = False
@@ -255,8 +264,8 @@ def find_job_in_celery(jobid):
     # except Exception as err:
     #     print(f"JOB FIND ERROR3: {err}")
 
-    print("act:", act)
-    print("que:", que)
+    # print("act:", act)
+    # print("que:", que)
     # print("sch:", sch)
     print(f"PRoc: {is_processed}, isque: {is_inQueue}, que: {queue}")
     return is_processed, is_inQueue, queue
