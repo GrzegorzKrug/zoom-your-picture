@@ -42,10 +42,14 @@ def find_closes_image(arguments):
         red, green, blue = inner_dict['r'], inner_dict['g'], inner_dict['b']
         hue, light, sat = inner_dict['hue'], inner_dict['light'], inner_dict['sat']
 
-        cur_error = abs(targ_blue - blue) ** 2 \
-                    + abs(targ_green - green) ** 2 \
-                    + abs(targ_red - red) ** 2 \
-                    + abs(targ_hue - hue) * 2
+        # cur_error = abs(targ_blue - blue) ** 2 \
+        #             + abs(targ_green - green) ** 2 \
+        #             + abs(targ_red - red) ** 2 \
+        #             + abs(targ_hue - hue) * 2
+        cur_error = abs(targ_blue - blue) \
+                    + abs(targ_green - green) \
+                    + abs(targ_red - red)
+
         if cur_error < error:
 
             error = cur_error
