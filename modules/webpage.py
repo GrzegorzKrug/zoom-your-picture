@@ -152,7 +152,7 @@ def _save_image(dest_name):
         npimg = np.frombuffer(imbytes, np.uint8)
         npimg = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
 
-        name, extension = str(image.filename).split(".")
+        *name, extension = str(image.filename).split(".")
         # print(f"name: {name}, extension: {extension}")
         outname = f"{dest_name}.png"
         outpath = os.path.join(app.config['IMAGE_DIRECTORY'], outname)
