@@ -10,6 +10,7 @@ from flask import render_template, make_response
 from backend.tasks import create_zoomgif
 from backend.celery import app as celery_app
 
+
 import numpy as np
 import hashlib
 import pickle

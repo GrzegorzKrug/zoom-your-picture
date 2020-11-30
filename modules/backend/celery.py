@@ -12,8 +12,7 @@ broker_url = f'amqp://{user}:{password}@{host}:{port}'
 app = Celery("backend",
              broker=broker_url,
              namespace="zoomgif", include=["backend.tasks"])
-app.conf.update(result_expires=3 * 3600)
+app.conf.update(result_expires=1 * 3600)
 
 if __name__ == "__main__":
     app.start()
-

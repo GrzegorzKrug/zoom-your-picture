@@ -23,7 +23,7 @@ svg>text:hover{
     animation: anim;
     animation-duration: var(--duration);
     animation-timing-function: linear;
-    animation-fill: both;
+    animation-fill-mode: both;
     animation-iteration-count: infinite;
     animation-direction: alternate;
 }

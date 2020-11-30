@@ -1,4 +1,5 @@
 from multiprocessing import Process, Queue, Pool
+from itertools import product
 from PIL import Image
 from io import BytesIO
 
@@ -30,30 +31,108 @@ def time_it_dec(func):
     return wrapper
 
 
+class DistanceGraph:
+    def __init__(self, array, keys, dimension=3):
+        array = np.array(array)
+        if array.shape[1] == dimension:
+            self.array = array
+        else:
+            assert array.shape[0] == dimension, "Dimension does not match!"
+            self.array = array.T
+        print(self.array.shape)
+        self.graph = {}
+        self.dimension = dimension
+        self.keys = keys
+        self.steps = []
+
+    @time_it_dec
+    def create_map(self):
+        graph = {}
+        keys = [''.join(arr) for arr in product("pm", repeat=self.dimension)]
+        template_budds = dict.fromkeys(keys, None).copy()
+
+        for current_key, cur_point in enumerate(self.array):
+            budds = template_budds.copy()
+
+            for bud_key, vec in enumerate(self.array):
+                if current_key == bud_key:
+                    continue
+
+                direction = ['p' if val > cval else 'm' for cval, val in zip(cur_point, vec)]
+                direction = ''.join(direction)
+                distance = self.calculate_distance(cur_point, vec)
+
+                current_buddy = {"dist": distance, 'key': bud_key}
+                is_someone = budds[direction]
+                if is_someone:
+                    some_dist = is_someone['dist']
+                    if distance < some_dist:
+                        budds[direction] = current_buddy
+                else:
+                    budds[direction] = current_buddy
+            budds = {b['key'] for b in budds.values() if b}
+            graph[current_key] = budds
+
+        for key, budds in graph.items():
+            for buddy in budds:
+                graph[buddy].add(key)
+
+        self.graph = graph
+
+    def find_closest(self, vec):
+        choosen = 0
+        steps = 0
+        while True:
+            steps += 1
+            is_better = self.better_neightbour(choosen, vec)
+            if is_better:
+                choosen = is_better
+            else:
+                break
+
+        last_buddies = {even_more_buddies
+                        for buddy in self.graph[choosen]
+                        for more_buddies in self.graph[buddy]
+                        for even_more_buddies in self.graph[more_buddies]
+                        }
+        last_buddies.add(choosen)
+        dist = [[budy, self.calculate_distance(vec, self.array[budy])] for budy in last_buddies]
+        ultimate = min(dist, key=lambda x: x[1])
+        #         print(f"Steps taken: {steps}")
+        self.steps.append(steps * 4 + len(dist))
+        return self.keys[ultimate[0]]
+
+    @staticmethod
+    def calculate_distance(vec1, vec2):
+        error = (vec1 - vec2)
+        error = (error * error).sum()
+        #         error = np.absolute(error).sum()
+        return error
+
+    def better_neightbour(self, cur_node_key: int, vec):
+        budds = self.graph[cur_node_key]
+        better = None
+        better_dist = self.calculate_distance(self.array[cur_node_key, :], vec)
+        #         print(f"Checking: {cur_node_key}")
+        for new_buddy_key in budds:
+            if new_buddy_key:
+                buddy_node = self.array[new_buddy_key]
+                distance = self.calculate_distance(vec, buddy_node)
+
+                if better_dist > distance:
+                    better_dist = distance
+                    better = new_buddy_key
+
+        out = better if better != cur_node_key else None
+        return out
+
+
 def find_closes_image(arguments):
     (
             targ_blue, targ_green, targ_red,
-            targ_hue, targ_ligth, targ_sat,
-            palette
+            dg
     ) = arguments
-    error = 255 ** 2
-    best = None
-    for path, inner_dict in palette.items():
-        red, green, blue = inner_dict['r'], inner_dict['g'], inner_dict['b']
-        hue, light, sat = inner_dict['hue'], inner_dict['light'], inner_dict['sat']
-
-        # cur_error = abs(targ_blue - blue) ** 2 \
-        #             + abs(targ_green - green) ** 2 \
-        #             + abs(targ_red - red) ** 2 \
-        #             + abs(targ_hue - hue) * 2
-        cur_error = abs(targ_blue - blue) \
-                    + abs(targ_green - green) \
-                    + abs(targ_red - red)
-
-        if cur_error < error:
-
-            error = cur_error
-            best = path
+    best = dg.find_closest([targ_blue, targ_green, targ_red])
     return best
 
 
@@ -150,7 +229,7 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
             (h * AVATAR_SIZE // PIXEL_RATIO, w * AVATAR_SIZE // PIXEL_RATIO, 3),
             dtype=np.uint8
     )
-    target_hls = cv2.cvtColor(target, cv2.COLOR_BGR2HLS)
+    # target_hls = cv2.cvtColor(target, cv2.COLOR_BGR2HLS)
 
     pool = Pool(4)
     loop_range = len(range(0, h, PIXEL_RATIO))
@@ -163,11 +242,11 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
             target_slice = slice(cur_row, cur_row + PIXEL_RATIO), slice(cur_col, cur_col + PIXEL_RATIO)
 
             curr_target_bgr = target[target_slice]
-            curr_target_hls = target_hls[target_slice]
+            # curr_target_hls = target_hls[target_slice]
 
             blue, green, red = np.mean(curr_target_bgr, axis=0).mean(axis=0)
-            hue, light, sat = np.mean(curr_target_hls, axis=0).mean(axis=0)
-            args = blue, green, red, hue, light, sat, palette
+            # hue, light, sat = np.mean(curr_target_hls, axis=0).mean(axis=0)
+            args = blue, green, red, palette
             iter_like_orders.append(args)
 
         results = pool.map(find_closes_image, iter_like_orders)
@@ -200,7 +279,7 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
                         print(f"{err}")
         timeend = time.time()
         duration = timeend - time0
-        print(f"{row_num:>3} of {loop_range} was executed in: {duration:>4.1f}s")
+        # print(f"{row_num:>3} of {loop_range} was executed in: {duration:>4.1f}s")
     return output
 
 
@@ -216,6 +295,7 @@ def scale_image_to_max_dim(image, max_val):
 
 
 def load_palette(config=None):
+    print(f"NAME: {__name__}")
     if config:
         pal_path = config['palpath']
     else:
@@ -286,7 +366,17 @@ def recreate_all_palettes():
         cur_path = os.path.join(PAL_DIR, directory)
         if os.path.isdir(cur_path):
             arr = create_palette(cur_path)
+            keys, arr = [*zip(*arr.items())]
+            good_ar = []
+            for dct in arr:
+                good_ar.append((dct['b'], dct['g'], dct['r']))
+            # print(keys)
+            arr = DistanceGraph(good_ar, keys)
+            arr.create_map()
+            # arr.__module__ = "backend.create_gif"
+            # arr.__module__ = "backend.create_gif"
             pal_dirs.update({directory: arr})
+        # break
 
     with open(PAL_PATH, "wb") as fp:
         pickle.dump(pal_dirs, fp)
@@ -310,32 +400,25 @@ def create_palette(dir_path):
         elif height != width:
             print(f"This image is not squared: {height:>4}, {width:>4} - {image_path}")
             image = make_stamp_square(image_path)
-        hls_img = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
+        # hls_img = cv2.cvtColor(image, cv2.COLOR_BGR2HLS)
 
         blue, green, red = np.mean(image, axis=0).mean(axis=0)
-        hue, light, sat = np.mean(hls_img, axis=0).mean(axis=0)
+        # hue, light, sat = np.mean(hls_img, axis=0).mean(axis=0)
         rel_dir = re.sub(r"^.*palette" + f"{os.path.sep}", "", image_path)
         # print(rel_dir)
 
         palette[rel_dir] = {
                 "r": red, "g": green, "b": blue,
-                "hue": hue, "sat": sat, "light": light,
+                # "hue": hue, "sat": sat, "light": light,
         }
     print(f"Palette size: {len(palette.keys())}")
     return palette
 
 
 def select_palette(all_palettes, selection=None):
-    if selection:
-        cur = [value for pal_name, value in all_palettes.items()
-               for sel in selection if sel in pal_name]
-        palette = {}
-        for c in cur:
-            palette.update({**c})
-
-    else:
-        palette = random.choice(list(all_palettes.values()))
-    print(f"Palette size: {len(palette)}")
+    print(all_palettes)
+    print(type(all_palettes))
+    palette = random.choice(list(all_palettes.values()))
     return palette
 
 
@@ -368,7 +451,7 @@ def start_job(src_path, output_path, power, output_size=None):
     print(f"paldir: {PAL_DIR}")
     print(f"palpat: {PAL_PATH}")
 
-    make_mozaic_and_gif(src_path, output_path, selection=['mess'], config=config)
+    make_mozaic_and_gif(src_path, output_path, selection=['fac'], config=config)
 
 
 "Consts"
@@ -377,7 +460,10 @@ AVATAR_SIZE = 50
 FILL_BORDER_WHEN_CROP = True
 
 if __name__ == "__main__":
-    srcpath = os.path.join("..", "incoming", "1606510065-bc7d94d1eac40f19f736c5852ca4919ba7c49b39.png")
-    outpath = os.path.join("..", "outputgifs", "1606510065-bc7d94d1eac40f19f736c5852ca4919ba7c49b39.gif")
-    # start_job(srcpath, outpath, 50, 500)
-    recreate_all_palettes()
+    srcpath = os.path.join("..", "incoming", "1606699002-d57e8f63456428ef1e8e5576bc3fe79d88a59f9c.png")
+    outpath = os.path.join("..", 'static', "outputgifs", "1606699002-d57e8f63456428ef1e8e5576bc3fe79d88a59f9c.gif")
+    # DistanceGraph.__module__ = "backend.create_gif"
+    # recreate_all_palettes()
+    start_job(srcpath, outpath, 300, 600)
+    # pal = load_palette()
+    # print(pal)

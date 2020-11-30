@@ -10,6 +10,5 @@ RUN apt-get install 'ffmpeg'\
 RUN mkdir app
 WORKDIR /app
 COPY . ./
-RUN ls
 RUN pip install -r requirements.txt
 CMD echo "Add command to run some service"
