@@ -9,6 +9,7 @@ import pickle
 import random
 import numpy as np
 import glob
+import math
 import time
 import cv2
 import sys
@@ -32,7 +33,7 @@ def time_it_dec(func):
 
 
 class DistanceGraph:
-    def __init__(self, array, keys, dimension=3):
+    def __init__(self, array, keys, dimension=3, name=None):
         array = np.array(array)
         if array.shape[1] == dimension:
             self.array = array
@@ -43,7 +44,8 @@ class DistanceGraph:
         self.graph = {}
         self.dimension = dimension
         self.keys = keys
-        self.steps = []
+        self.pivots = {0}
+        self.name = name
 
     @time_it_dec
     def create_map(self):
@@ -78,29 +80,85 @@ class DistanceGraph:
                 graph[buddy].add(key)
 
         self.graph = graph
+        self.get_pivots()
+        print(f"Created graph of {self.name}")
 
+    @time_it_dec
+    def get_pivots(self):
+        # points = list(product([40, 127, 210], repeat=self.dimension))
+        points = list(product([30, 127, 220], repeat=self.dimension))
+        # points = list(product([30, 80, 127, 170, 220], repeat=self.dimension))
+        # points = list(product([20, 90, 160, 230], repeat=self.dimension))
+
+        pivots = set()
+        pivots = {self.find_closest(vec)[0] for vec in points}
+        print(f"Pivots of {self.name}: {pivots}")
+        self.pivots = pivots
+
+    #     @time_it_dec
     def find_closest(self, vec):
-        choosen = 0
+        roots = [[piv, self.calculate_distance(vec, self.array[piv, :])]
+                 for piv in self.pivots
+                 ]
+        #         print(roots)
+        choosen = min(roots, key=lambda x: x[1])[0]
+        #         print(f"Choosen: {choosen}")
+        steps = len(roots)
+        while True:
+            choosen, stp1 = self.walk_further(choosen, vec)
+            better, stp2, best_distance = self.ask_friends(choosen, vec)
+            steps += stp1 + stp2
+            if better == choosen:
+                break
+            else:
+                choosen = better
+        # print(f"Steps taken: {steps}")
+        #         key = self.keys[choosen]
+        return choosen, steps, best_distance
+
+    def walk_further(self, choosen, vec):
         steps = 0
         while True:
-            steps += 1
+            steps += len(self.graph[choosen])
             is_better = self.better_neightbour(choosen, vec)
             if is_better:
                 choosen = is_better
             else:
                 break
+        return choosen, steps
 
-        last_buddies = {even_more_buddies
-                        for buddy in self.graph[choosen]
-                        for more_buddies in self.graph[buddy]
-                        for even_more_buddies in self.graph[more_buddies]
-                        }
+    def ask_friends(self, choosen, vec, deep=3):
+        """
+
+        Args:
+            choosen:
+            vec:
+            deep:
+
+        Returns:
+            bestindex
+            steps number
+            best distance
+        """
+        if deep == 3:
+            last_buddies = {even_more_buddies
+                            for buddy in self.graph[choosen]
+                            for more_buddies in self.graph[buddy]
+                            for even_more_buddies in self.graph[more_buddies]
+                            }
+        else:
+            n = 0
+            last_buddies = {bud for bud in self.graph[choosen]}
+            while n < deep - 1:
+                n += 1
+                budds = {buddy for bud in last_buddies for buddy in self.graph[bud]}
+                last_buddies = {*last_buddies, *budds}
+
         last_buddies.add(choosen)
         dist = [[budy, self.calculate_distance(vec, self.array[budy])] for budy in last_buddies]
         ultimate = min(dist, key=lambda x: x[1])
-        #         print(f"Steps taken: {steps}")
-        self.steps.append(steps * 4 + len(dist))
-        return self.keys[ultimate[0]]
+        steps = len(dist)
+        return ultimate[0], steps, ultimate[1]
 
     @staticmethod
     def calculate_distance(vec1, vec2):
@@ -130,10 +188,17 @@ class DistanceGraph:
 def find_closes_image(arguments):
     (
             targ_blue, targ_green, targ_red,
-            dg
+            palette_list
     ) = arguments
-    best = dg.find_closest([targ_blue, targ_green, targ_red])
-    return best
+    results = []
+    all_steps = 0
+    for dg in palette_list:
+        best, steps, best_distance = dg.find_closest([targ_blue, targ_green, targ_red])
+        path = dg.keys[best]
+        results.append([path, best_distance])
+        all_steps += steps
+    choosen = min(results, key=lambda x: x[1])[0]
+    return choosen, all_steps
 
 
 def image_array_to_pillow(matrix):
@@ -184,7 +249,6 @@ def make_gif(image, config, cx=None, cy=None, ):
 
     frame = image[roi_slice]
     frame = scale_image_to_max_dim(frame, OUTPUT_GIF_MAX_SIZE)
-    print(f"First frame dims: {frame.shape}")
     pil_image = image_array_to_pillow(frame)
 
     framerate = 1 / 120
@@ -212,11 +276,11 @@ def make_gif(image, config, cx=None, cy=None, ):
     frames_list[0].save(config['outputpath'], format="GIF",
                         append_images=frames_list[1:],
                         save_all=True, optimize=False, duration=duration, loop=0)
-    print(f"Saved GIF.")
+    # print(f"Saved GIF.")
 
 
 @time_it_dec
-def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_error=False):
+def get_mozaic(target, palette_list, config, ignore_image_size=True, fill_border_at_error=False):
     # target_hsv = cv2.cvtColor(target, cv2.COLOR_BGR2HSV)
     h, w, c = target.shape
     PIXEL_RATIO = config['pixelratio']
@@ -232,6 +296,7 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
     # target_hls = cv2.cvtColor(target, cv2.COLOR_BGR2HLS)
 
     pool = Pool(4)
+    steps = []
     loop_range = len(range(0, h, PIXEL_RATIO))
     for row_num, cur_row in enumerate(range(0, h, PIXEL_RATIO)):
         time0 = time.time()
@@ -246,7 +311,7 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
 
             blue, green, red = np.mean(curr_target_bgr, axis=0).mean(axis=0)
             # hue, light, sat = np.mean(curr_target_hls, axis=0).mean(axis=0)
-            args = blue, green, red, palette
+            args = blue, green, red, palette_list
             iter_like_orders.append(args)
 
         results = pool.map(find_closes_image, iter_like_orders)
@@ -259,8 +324,8 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
             )
 
             roi = output[output_slice]
-            relative_path = results.pop(0)
-
+            relative_path, stp = results.pop(0)
+            steps.append(stp)
             if relative_path:
                 # print(relative_path)
                 abs_path = os.path.join(config['paldir'], relative_path)
@@ -280,6 +345,7 @@ def get_mozaic(target, palette, config, ignore_image_size=True, fill_border_at_e
         timeend = time.time()
         duration = timeend - time0
         # print(f"{row_num:>3} of {loop_range} was executed in: {duration:>4.1f}s")
+    print(f"Average steps, {np.average(steps):>5.1f}, all steps for image: {np.sum(steps) / 1e6:>5.2f}M")
     return output
 
 
@@ -295,7 +361,6 @@ def scale_image_to_max_dim(image, max_val):
 
 
 def load_palette(config=None):
-    print(f"NAME: {__name__}")
     if config:
         pal_path = config['palpath']
     else:
@@ -318,9 +383,9 @@ def make_mozaic_and_gif(target_path, out_path, config, selection=None):
         height, width, _ = image.shape
 
         all_pallettes = load_palette(config)
-        palette = select_palette(all_pallettes, selection)
-        mozaic = get_mozaic(image, palette, config, fill_border_at_error=FILL_BORDER_WHEN_CROP)
-        print(f"Mozaic size: {mozaic.shape}")
+        palette_list = get_palette_list(all_pallettes, selection)
+        mozaic = get_mozaic(image, palette_list, config, fill_border_at_error=FILL_BORDER_WHEN_CROP)
+        # print(f"Mozaic size: {mozaic.shape}")
         make_gif(mozaic, config)
 
     except Exception as err:
@@ -362,24 +427,32 @@ def recreate_all_palettes():
     PAL_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "palette"))
     PAL_PATH = os.path.join(PAL_DIR, "palettes.pickle")
 
+    jobs = []
     for directory in os.listdir(PAL_DIR):
         cur_path = os.path.join(PAL_DIR, directory)
-        if os.path.isdir(cur_path):
-            arr = create_palette(cur_path)
-            keys, arr = [*zip(*arr.items())]
-            good_ar = []
-            for dct in arr:
-                good_ar.append((dct['b'], dct['g'], dct['r']))
-            # print(keys)
-            arr = DistanceGraph(good_ar, keys)
-            arr.create_map()
-            # arr.__module__ = "backend.create_gif"
-            # arr.__module__ = "backend.create_gif"
-            pal_dirs.update({directory: arr})
-        # break
 
+        if os.path.isdir(cur_path):
+            jobs.append((directory, cur_path))
+            # pal_dirs.update({directory: arr})
+
+    results = Pool(10).map(create_async_graph, jobs)
+    for directory, res in results:
+        pal_dirs.update({directory: res})
     with open(PAL_PATH, "wb") as fp:
         pickle.dump(pal_dirs, fp)
+
+
+def create_async_graph(args):
+    directory, cur_path = args
+    arr = create_palette(cur_path)
+    keys, arr = [*zip(*arr.items())]
+    good_ar = []
+    for dct in arr:
+        good_ar.append((dct['b'], dct['g'], dct['r']))
+    # print(keys)
+    dg = DistanceGraph(good_ar, keys, name=os.path.basename(cur_path))
+    dg.create_map()
+    return directory, dg
 
 
 @time_it_dec
@@ -415,17 +488,21 @@ def create_palette(dir_path):
     return palette
 
 
-def select_palette(all_palettes, selection=None):
-    print(all_palettes)
-    print(type(all_palettes))
-    palette = random.choice(list(all_palettes.values()))
-    return palette
+def get_palette_list(all_palettes, selection=None):
+    if selection:
+        assert isinstance(selection, (list, tuple))
+        selection = {key: dg for key, dg in all_palettes.items() for text in selection if text in key}
+
+    if selection:
+        return list(selection.values())
+    else:
+        return list(random.choice(list(all_palettes.values())))
 
 
 def start_job(src_path, output_path, power, output_size=None):
     """"""
-    print(f"src: {src_path}")
-    print(f"out: {output_path}")
+    # print(f"src: {src_path}")
+    # print(f"out: {output_path}")
     OUTPUT_GIF_MAX_SIZE = output_size
     image = cv2.imread(src_path)
     height, width, ch = image.shape
@@ -434,24 +511,28 @@ def start_job(src_path, output_path, power, output_size=None):
 
     PROC_POWER = power
     PIXEL_RATIO = round(OUTPUT_GIF_MAX_SIZE / PROC_POWER)
-
-    MAX_PIC_SIZE = OUTPUT_GIF_MAX_SIZE
+    PIXEL_RATIO = 1 if PIXEL_RATIO < 1 else PIXEL_RATIO
+    MAX_PIC_SIZE = PROC_POWER * PIXEL_RATIO
+    MAX_PIC_SIZE = OUTPUT_GIF_MAX_SIZE if MAX_PIC_SIZE > OUTPUT_GIF_MAX_SIZE else MAX_PIC_SIZE
 
     PAL_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "palette"))
     PAL_PATH = os.path.join(PAL_DIR, "palettes.pickle")
+    pixels = (height // PIXEL_RATIO) * (width // PIXEL_RATIO)
 
     config = {"pixelratio": PIXEL_RATIO, "power": PROC_POWER,
               "outputsize": OUTPUT_GIF_MAX_SIZE, "maxpicsize": MAX_PIC_SIZE,
               "outputpath": output_path,
               "paldir": PAL_DIR, "palpath": PAL_PATH}
     print(f"Input height: {height}, width: {width}")
-    print(f"PIXEL ratio: {PIXEL_RATIO}")
-    print(f"Output max size: {OUTPUT_GIF_MAX_SIZE}")
     print(f"Processing power: {PROC_POWER}")
-    print(f"paldir: {PAL_DIR}")
-    print(f"palpat: {PAL_PATH}")
+    print(f"Pixel ratio: {PIXEL_RATIO}")
+    print(f"Pixels to find: {pixels:,}")
+    print(f"Processing image size: {MAX_PIC_SIZE}")
+    print(f"Output max size: {OUTPUT_GIF_MAX_SIZE}")
+    # print(f"paldir: {PAL_DIR}")
+    # print(f"palpat: {PAL_PATH}")
 
-    make_mozaic_and_gif(src_path, output_path, selection=['fac'], config=config)
+    make_mozaic_and_gif(src_path, output_path, selection=['dex', 'open', 'twitt'], config=config)
 
 
 "Consts"
