@@ -93,7 +93,7 @@ def limit_content_length(max_length):
 
 @app.route("/process_image", methods=["GET", "POST"])
 @limit_content_length(5 * 1024 * 1024)
-@limiter.limit("10/10minute")
+@limiter.limit("10/1hour")
 def validate_image():
     if request.method == "GET":
         ret = redirect(url_for("new_gif"))
@@ -195,7 +195,7 @@ def gif(token=None, jobid=None):
         try:
             isProc, isQue, quePos = find_job_in_celery(jobid)
             if isProc:
-                text = "Your image is currently processed"
+                text = "Your image is now generated."
             elif isQue:
                 text = f"Your image is in queue, position: {quePos}. Max time est: {quePos * avg_time} min"
             elif quePos >= 9:
@@ -288,7 +288,7 @@ def find_job_in_celery(jobid):
 
 @app.route("/about")
 def about():
-    render = render_template("render.html", content="This is me.")
+    render = render_template("about.html")
     return render
 
 

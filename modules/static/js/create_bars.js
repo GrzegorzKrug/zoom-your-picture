@@ -15,7 +15,6 @@ function CreateBars()  {
     for(i=0; i<ids.length; i++){
         ct = document.createElement("div");
         ct.style.padding = "3px";
-        ct.style.background = "rgb(230,250,250)";
         ct.style.margin = "10px";
 //        ct.style.width = "10%";
 

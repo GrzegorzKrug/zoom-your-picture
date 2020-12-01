@@ -2,11 +2,14 @@
 
 
 {% block title %}
-    Result page
+
+l
+lResult page
 {% endblock %}
 {% block content %}
 
     {% if imgPath %}
+    <p>Your image will be stored for 2 hours.</p>
     <img src="{{ imgPath }}">
     {% elif workStatus %}
     {{ workStatus }}
