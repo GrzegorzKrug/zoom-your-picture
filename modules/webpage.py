@@ -10,7 +10,6 @@ from flask import render_template, make_response
 from backend.tasks import create_zoomgif
 from backend.celery import app as celery_app
 
-
 import numpy as np
 import hashlib
 import pickle
@@ -94,18 +93,18 @@ def limit_content_length(max_length):
 
 @app.route("/process_image", methods=["GET", "POST"])
 @limit_content_length(5 * 1024 * 1024)
-@limiter.limit("10/5minute")
+@limiter.limit("10/10minute")
 def validate_image():
     if request.method == "GET":
         ret = redirect(url_for("new_gif"))
     elif request.method == "POST":
-        ret = process_image()
+        ret = _validate()
     else:
         ret = redirect(url_for("new_gif"))
     return ret
 
 
-def process_image():
+def _validate():
     print(f"Processing POST")
     enter = f"{np.random.random(100)}"
     secr = f"{enter}-{time.time()}".encode()
@@ -116,9 +115,23 @@ def process_image():
     valid = _save_image(jobtoken)
     if valid:
         print(f"Image was accepted")
-        power = 150
-        output_max_size = 500
-        res = create_zoomgif.delay(jobtoken, power, output_max_size)
+        power = request.form.get("powerBar", 50)
+        outsize = request.form.get("sizeBar", 500)
+        palette = request.form.get("palette", None)
+
+        power = int(power)
+        outsize = int(outsize)
+
+        if power < 10 or power > 200 or outsize < 50 or outsize > 500:
+            abort(400)
+        if palette:
+            palette = [str(palette)]
+
+        print(f"{'=' * 30} Power:   {power}")
+        print(f"{'=' * 30} Outsize: {outsize}")
+        print(f"{'=' * 30} palette: {palette}")
+
+        res = create_zoomgif.delay(jobtoken, power, outsize, palette=palette)
         jobid = res.id
 
         # result_url = url_for("gif", token=jobtoken, jobid=jobid)
@@ -126,7 +139,6 @@ def process_image():
         response = redirect(url_for("gif", token=jobtoken, jobid=jobid))
     else:
         response = make_response(render_template("process.html"))
-        return response
     # prev_tokens = request.cookies.get("all_tokens", None)
     # if prev_tokens:
     #     print(f"prev: {prev_tokens}")
@@ -185,7 +197,7 @@ def gif(token=None, jobid=None):
             if isProc:
                 text = "Your image is currently processed"
             elif isQue:
-                text = f"Your image is in queue, position: {quePos}. Estimated: {quePos * avg_time} min"
+                text = f"Your image is in queue, position: {quePos}. Max time est: {quePos * avg_time} min"
             elif quePos >= 9:
                 text = f"Your image is in queue, position: 10+"
             else:

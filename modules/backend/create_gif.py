@@ -375,7 +375,7 @@ def load_palette(config=None):
     return palette
 
 
-def make_mozaic_and_gif(target_path, out_path, config, selection=None):
+def make_mozaic_and_gif(target_path, config, selection=None):
     MAX_PIC_SIZE = config['maxpicsize']
     try:
         image = cv2.imread(target_path, cv2.IMREAD_COLOR)
@@ -496,10 +496,13 @@ def get_palette_list(all_palettes, selection=None):
     if selection:
         return list(selection.values())
     else:
-        return list(random.choice(list(all_palettes.values())))
+        # print(f"KEYS: {all_palettes.keys()}")
+        # rnd_key = random.choice(list(all_palettes.keys()))
+        # print(f"Random key: {rnd_key}")
+        return [random.choice(list(all_palettes.values()))]
 
 
-def start_job(src_path, output_path, power, output_size=None):
+def start_job(src_path, output_path, power, output_size=None, palette=None):
     """"""
     # print(f"src: {src_path}")
     # print(f"out: {output_path}")
@@ -532,7 +535,7 @@ def start_job(src_path, output_path, power, output_size=None):
     # print(f"paldir: {PAL_DIR}")
     # print(f"palpat: {PAL_PATH}")
 
-    make_mozaic_and_gif(src_path, output_path, selection=['dex', 'open', 'twitt'], config=config)
+    make_mozaic_and_gif(src_path, selection=palette, config=config)
 
 
 "Consts"

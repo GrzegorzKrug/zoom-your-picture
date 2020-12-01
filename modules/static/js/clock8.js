@@ -50,7 +50,7 @@ var slowArrowLenght = 40;
       ctx.clearRect(0, 0, c.width, c.height);
 
       draw_clock_skelet()
-      draw_24clock_labels()
+      draw_8clock_labels()
 
       out = get_8_time();
       hour = out[0];
@@ -135,7 +135,7 @@ var slowArrowLenght = 40;
       ctx.restore();
     }
 
-    function draw_24clock_labels(){
+    function draw_8clock_labels(){
       ctx.save();
       ctx.font='bold 20px Verdana';
       ctx.textAlign = "center";
@@ -145,7 +145,7 @@ var slowArrowLenght = 40;
       plates = [8.64, 1,2,3,4,5,6,7]
       circe_len = 8.64;
       lindist = 13;
-      ctx.lineWidth=5;
+      ctx.lineWidth = 5;
       ctx.strokeStyle = bigLineColor;
 
       for(i=0;i<plates.length;i++){
@@ -163,11 +163,19 @@ var slowArrowLenght = 40;
         ctx.stroke();
       }
 
-      lindist = 7
-      ctx.lineWidth = 3;
+
+
       ctx.strokeStyle = smallLineColor;
 
       for(i=1;i<=fullrange;i++){
+        if (i % 25 == 0 ){
+            lindist = 10;
+            ctx.lineWidth = plateLineThickness;
+        }
+        else{
+            lindist = 7
+            ctx.lineWidth = 3;
+        }
 
         ctx.beginPath();
         startx = clockx + Math.sin(-i/fullrange*2*Math.PI+Math.PI)*(clockrad-bd)

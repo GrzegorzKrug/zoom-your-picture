@@ -10,6 +10,12 @@
         font-Family: Verdana;
         text-shadow: 1px 1px rgb(0,0,0);
         }
+        img {
+            display: none;
+        }
+        .preview {
+            margin: 15px;
+        }
     </style>
 {% endblock %}
 
@@ -22,22 +28,29 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
 
+<div class="container">
   <form action='{{ url_for("validate_image") }}'
         method="POST" enctype="multipart/form-data"
-        onchange="ValidateFileIfImage()"  >
+        onchange="ValidateFileIfImage();"  >
     <div class="form-group">
         <input type="file"
                class="custom-file-input"
                name="upImage"
                id="upImage">
-    </div>
-      <script id="validateFile" src="{{ url_for('static', filename='js/validateFile.js') }}">
-      </script>
-    <p id="validationTextField"></p>
-    <button id="submitBt" type="submit" class="btn btn-primary">Confirm</button>
 
+    </div>
+    <div id="barContainer"></div>
+      <label>Select emojis palette:</label>
+    <div id="radioContainer">
+    </div>
+    <div class="preview">
+        <img id="preview" alt="preview" onclick="PictureClicked();">
+    </div>
+    <p id="validationTextField"></p>
+    <script id="validateScript" src="{{ url_for('static', filename='js/validateFile.js') }}"></script>
+    <script id="createBarsScript" src="{{ url_for('static', filename='js/create_bars.js') }}"></script>
+    <button id="submitBt" type="submit" class="btn btn-primary">Confirm</button>
   </form>
 
 </div>
