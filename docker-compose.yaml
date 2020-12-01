@@ -8,6 +8,7 @@ services:
       dockerfile: DOCKERFILE_SERVER
     ports:
       - "5000:5000"
+      - "80:80"
     volumes:
       - ./modules:/app
     command: "python webpage.py"
