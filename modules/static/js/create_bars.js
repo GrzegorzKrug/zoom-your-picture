@@ -2,8 +2,8 @@ const ids = ["powerBar", "sizeBar"];
 const textids = ["powerText", "sizeText"];
 const text = ["Power", "Output size"];
 const minvals = [50, 50];
-const maxvals = [200, 500];
-const vals = [150, 500];
+const maxvals = [150, 500];
+const vals = [100, 500];
 const steps = [1, 5];
 
 function CreateBars()  {
@@ -48,12 +48,8 @@ function CreateBars()  {
         ct.appendChild(tx);
 //        ct.style.align = "left";
         root.appendChild(ct);
-
-        console.log(i);
     }
 
-
-    console.log("CREATED!");
 
 }
 
@@ -96,17 +92,12 @@ window.onload = () => {
 
 
 function onBarChanged(event){
-console.log(event);
 const i = event.target.attributes.barid.value
 const val = event.target.value
-console.log(i);
 
 search = "textid" + i;
-console.log(search);
 tx = document.getElementById(search);
-//console.log(tx);
 new_text = text[i] + " " + val + " px";
-//console.log(new_text);
 tx.innerHTML = new_text;
 
 }

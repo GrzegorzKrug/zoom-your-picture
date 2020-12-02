@@ -17,7 +17,7 @@ app.conf.timezone = 'UTC'
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(20 * 60, remove_old_pics.s(), name='clear pictures every 20 min')
+    sender.add_periodic_task(10 * 60, remove_old_pics.s(), name='clear pictures every 10 min')
 
     # # Executes every Monday morning at 7:30 a.m.
     # sender.add_periodic_task(
@@ -27,7 +27,7 @@ def setup_periodic_tasks(sender, **kwargs):
 
 
 @app.task
-def remove_old_pics(maxAge=2 * 60 * 60):
+def remove_old_pics(maxAge=60 * 60):
     print("Periodic celery: remove old pics")
     work_dirs = [
             os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'incoming')),

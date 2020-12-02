@@ -3,13 +3,13 @@
 
 {% block title %}
 
-l
-lResult page
+
+Result page
 {% endblock %}
 {% block content %}
 
     {% if imgPath %}
-    <p>Your image will be stored for 2 hours.</p>
+    <p>Your image will be deleted after 1 hour.</p>
     <img src="{{ imgPath }}">
     {% elif workStatus %}
     {{ workStatus }}

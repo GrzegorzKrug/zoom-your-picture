@@ -123,7 +123,7 @@ def _validate():
         power = int(power)
         outsize = int(outsize)
 
-        if power < 10 or power > 200 or outsize < 50 or outsize > 500:
+        if power < 10 or power > 150 or outsize < 50 or outsize > 500:
             abort(400)
         if palette:
             palette = [str(palette)]
@@ -135,9 +135,7 @@ def _validate():
         res = create_zoomgif.delay(jobtoken, power, outsize, palette=palette)
         jobid = res.id
 
-        # result_url = url_for("gif", token=jobtoken, jobid=jobid)
-        # response = make_response(render_template("process.html", url=result_url, token=jobtoken))
-        response = redirect(url_for("gif", token=jobtoken, jobid=jobid))
+        response = make_response(render_template("process.html", token=jobtoken, jobid=jobid))
     else:
         response = make_response(render_template("process.html"))
     # prev_tokens = request.cookies.get("all_tokens", None)
@@ -183,12 +181,16 @@ def _save_image(dest_name):
 
 @app.route("/gif/<token>/<jobid>", methods=["GET"])
 @app.route("/gif/<token>/", methods=["GET"])
+# @app.route("/gif/", methods=["GET"])
 @limiter.exempt
 def gif(token=None, jobid=None):
     print(f"Checking gif, token: {token}, jobid: {jobid}")
     imgPath = os.path.join(app.config['RESOURCE_DIRECTORY'], f"{token}.gif")
     isImage = os.path.isfile(imgPath)
-    avg_time = 3
+    avg_time = 1
+    # if token is None:
+    #     token = request.args.get(token, None)
+
     url = url_for("static", filename=f"outputgifs/{token}.gif")
     if isImage:
         return render_template("process_results.html", imgPath=url)

@@ -6,18 +6,15 @@ Processing
 {% endblock %}
 
 {% block content %}
+  {% if token %}
+  <script id="redirect" src="{{ url_for('static', filename='js/redirectScript.js') }}">
+  </script>
+  <body id='runscritp' onload="DelayedRedirect(30, '{{ url_for('gif', token=token, jobid=jobid) }}' );"></body>
 
-{% if url %}
-<h2><p><a href="{{ url }}"> Here is link to your gif.</a></p></h2>
-Average processing time: ~ 3mins.
-<!--<script>-->
-<!--    tokens = {{ token|tojson }}-->
-<!--    for (tk of tokens){-->
-<!--    document.write(tk+"<br>");-->
-<!--    }-->
-<!--</script>-->
-{% else %}
-Sorry, your request has been rejected.
-{% endif %}
-
+  <h3>Your image was accepted.</h3>
+  <br>
+  Average processing time is 1min. You will be redirected after 30s.
+  {% else %}
+      Sorry, your request has been rejected.
+  {% endif %}
 {% endblock %}
