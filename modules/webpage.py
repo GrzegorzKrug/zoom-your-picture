@@ -27,6 +27,7 @@ app.config["IMAGE_DIRECTORY"] = os.path.abspath("incoming")
 app.config["RESOURCE_DIRECTORY"] = os.path.abspath("static/outputgifs")
 
 os.makedirs(app.config['IMAGE_DIRECTORY'], exist_ok=True)
+os.makedirs(app.config['RESOURCE_DIRECTORY'], exist_ok=True)
 
 app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["jpeg", "jpg", "png"]
 
