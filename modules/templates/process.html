@@ -12,8 +12,11 @@ Processing
   <body id='runscritp' onload="DelayedRedirect(30, '{{ url_for('gif', token=token, jobid=jobid) }}' );"></body>
 
   <h3>Your image was accepted.</h3>
+
   <br>
-  Average processing time is 1min. You will be redirected after 30s.
+  <a href="{{ url_for('gif', token=token, jobid=jobid) }}">
+    Average processing time is 1min. You will be redirected after 30s.
+  </a>
   {% else %}
       Sorry, your request has been rejected.
   {% endif %}
