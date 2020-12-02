@@ -19,7 +19,7 @@ services:
     image: zoomgif:3.8.5
     volumes:
       - ./modules:/app/
-    command: bash -c "cd backend & celery -A backend worker -B --loglevel=info -P threads --autoscale=2,2"
+    command: bash -c "cd backend & celery -A backend worker -B --loglevel=info -P threads --autoscale=1,1"
     depends_on:
       - broker
       - server

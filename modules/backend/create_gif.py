@@ -295,7 +295,7 @@ def get_mozaic(target, palette_list, config, ignore_image_size=True, fill_border
     )
     # target_hls = cv2.cvtColor(target, cv2.COLOR_BGR2HLS)
 
-    pool = Pool(4)
+    pool = Pool(2)
     steps = []
     loop_range = len(range(0, h, PIXEL_RATIO))
     for row_num, cur_row in enumerate(range(0, h, PIXEL_RATIO)):
