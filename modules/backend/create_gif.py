@@ -300,6 +300,7 @@ def get_mozaic(target, palette_list, config, ignore_image_size=True, fill_border
     pool = Pool(2)
     steps = []
     loop_range = len(range(0, h, PIXEL_RATIO))
+    pixel_count = 0
     for row_num, cur_row in enumerate(range(0, h, PIXEL_RATIO)):
         time0 = time.time()
 
@@ -307,7 +308,7 @@ def get_mozaic(target, palette_list, config, ignore_image_size=True, fill_border
         iter_like_orders = []
         for col_num, cur_col in enumerate(range(0, w, PIXEL_RATIO)):
             target_slice = slice(cur_row, cur_row + PIXEL_RATIO), slice(cur_col, cur_col + PIXEL_RATIO)
-
+            pixel_count += 1
             curr_target_bgr = target[target_slice]
             # curr_target_hls = target_hls[target_slice]
 
@@ -347,7 +348,7 @@ def get_mozaic(target, palette_list, config, ignore_image_size=True, fill_border
         timeend = time.time()
         duration = timeend - time0
         # print(f"{row_num:>3} of {loop_range} was executed in: {duration:>4.1f}s")
-    logger.info(f"avg steps: {np.average(steps):>3.1f}, all: {np.sum(steps) / 1e6:>3.2f}M")
+    logger.info(f"avg steps: {np.average(steps):>3.1f}, all: {np.sum(steps) / 1e6:>3.2f}M, pixels: {pixel_count/1000:>4.1f}k")
     return output
 
 
@@ -540,8 +541,7 @@ def start_job(src_path, output_path, power, output_size=None, palette=None):
     make_mozaic_and_gif(src_path, selection=palette, config=config)
     duration = int(time.time() - t0)
 
-    logger.info(f"Task completed: {os.path.basename(src_path)} "
-                + f"in {duration}s pixels: {pixels / 1000:>4.2f}k")
+    logger.info(f"Task completed: {os.path.basename(src_path)} ")
 
 
 "Consts"
