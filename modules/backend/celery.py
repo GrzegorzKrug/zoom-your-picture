@@ -1,4 +1,6 @@
 from celery import Celery
+from .logger_shared import logger
+
 import time
 import os
 
@@ -28,11 +30,12 @@ def setup_periodic_tasks(sender, **kwargs):
 
 @app.task
 def remove_old_pics(maxAge=60 * 60):
-    print("Periodic celery: remove old pics")
     work_dirs = [
             os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'incoming')),
             os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static', 'outputgifs'))
     ]
+    count_files = 0
+
     for wk in work_dirs:
         for fl in os.listdir(wk):
             file_path = os.path.join(wk, fl)
@@ -41,8 +44,13 @@ def remove_old_pics(maxAge=60 * 60):
             age = round(time.time()) - round(creationtime)
             if age > maxAge:
                 print(f"Removing file: {file_path}")
-                os.remove(file_path)
-
+                try:
+                    os.remove(file_path)
+                    count_files += 1
+                except Exception:
+                    logger.error(f"Error when removing file: {file_path}")
+    if count_files > 0:
+        logger.info(f"Removed {count_files} files")
 
 if __name__ == "__main__":
     app.start()

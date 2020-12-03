@@ -3,6 +3,8 @@ from itertools import product
 from PIL import Image
 from io import BytesIO
 
+from .logger_shared import logger
+
 import traceback
 import imutils
 import pickle
@@ -345,7 +347,7 @@ def get_mozaic(target, palette_list, config, ignore_image_size=True, fill_border
         timeend = time.time()
         duration = timeend - time0
         # print(f"{row_num:>3} of {loop_range} was executed in: {duration:>4.1f}s")
-    print(f"Average steps, {np.average(steps):>5.1f}, all steps for image: {np.sum(steps) / 1e6:>5.2f}M")
+    logger.info(f"avg steps: {np.average(steps):>3.1f}, all: {np.sum(steps) / 1e6:>3.2f}M")
     return output
 
 
@@ -504,8 +506,8 @@ def get_palette_list(all_palettes, selection=None):
 
 def start_job(src_path, output_path, power, output_size=None, palette=None):
     """"""
-    # print(f"src: {src_path}")
-    # print(f"out: {output_path}")
+    t0 = time.time()
+
     OUTPUT_GIF_MAX_SIZE = output_size
     image = cv2.imread(src_path)
     height, width, ch = image.shape
@@ -536,6 +538,10 @@ def start_job(src_path, output_path, power, output_size=None, palette=None):
     # print(f"palpat: {PAL_PATH}")
 
     make_mozaic_and_gif(src_path, selection=palette, config=config)
+    duration = int(time.time() - t0)
+
+    logger.info(f"Task completed: {os.path.basename(src_path)} " 
+                + f"in {duration}s pixels: {pixels/1000:>4.2f}k")
 
 
 "Consts"

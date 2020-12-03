@@ -10,6 +10,7 @@ from flask import render_template, make_response
 from backend.tasks import create_zoomgif
 from backend.celery import app as celery_app
 
+import logging
 import numpy as np
 import hashlib
 import pickle
@@ -23,8 +24,33 @@ limiter = Limiter(
         key_func=get_remote_address)
 limiter.init_app(app)
 
+logger = logging.getLogger("flask")
+logger.setLevel("INFO")
+
+counter = logging.getLogger("count_endpoints")
+counter.setLevel("INFO")
+
+fh = logging.FileHandler("flask.log", mode='a')
+fh_counter = logging.FileHandler("count.log", mode='a')
+ch = logging.StreamHandler()
+
+formatter = logging.Formatter(f"%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter_count = logging.Formatter(f"%(asctime)s - %(message)s")
+
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+fh_counter.setFormatter(formatter_count)
+
+logger.addHandler(fh)
+logger.addHandler(ch)
+counter.addHandler(fh_counter)
+
+app.logger = logger
+app.counter = counter
+
 app.config["IMAGE_DIRECTORY"] = os.path.abspath("incoming")
 app.config["RESOURCE_DIRECTORY"] = os.path.abspath("static/outputgifs")
+
 
 os.makedirs(app.config['IMAGE_DIRECTORY'], exist_ok=True)
 os.makedirs(app.config['RESOURCE_DIRECTORY'], exist_ok=True)
@@ -37,47 +63,6 @@ app.config["ALLOWED_IMAGE_EXTENSIONS"] = ["jpeg", "jpg", "png"]
 # app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 # Scss(app)
 
-
-@app.route("/")
-def blank():
-    return redirect(url_for('home'))
-
-
-@app.route("/home/")
-def home():
-    return render_template("home.html")
-
-
-@app.route("/animation/")
-def animation():
-    return render_template("anim.html")
-
-
-@app.route("/clocks/")
-@limiter.exempt
-@app.errorhandler(429)
-def clocks(er=None):
-    was_uploading = r"process_image" in request.endpoint
-    print(f"upload: {was_uploading}")
-    if er:
-        return render_template("clocks.html", rate_error=er, hide_navbar=not was_uploading)
-    return render_template("clocks.html")
-
-
-@app.errorhandler(404)
-@app.errorhandler(400)
-def error_handler(error):
-    print(error)
-    errorCode = error.code
-    return render_template("error.html", error=error, errorCode=errorCode), errorCode
-
-
-@app.route("/newgif", methods=["GET"])
-def new_gif():
-    render = render_template("upload_gif_form.html")
-    return render
-
-
 def limit_content_length(max_length):
     def decorator(f):
         @wraps(f)
@@ -86,15 +71,72 @@ def limit_content_length(max_length):
             if cl is not None and cl > max_length:
                 abort(413)
             return f(*args, **kwargs)
-
         return wrapper
-
     return decorator
+
+def log_endpoint(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        req = request
+        app.counter.info(req.url_rule)
+        app.logger.info(f"{req.method}: {req.path}")
+        return f(*args, **kwargs)
+    return wrapper
+
+        
+@app.route("/")
+@log_endpoint
+def blank():
+    app.counter.info("root")
+    return redirect(url_for('home'))
+
+
+@app.route("/home/")
+@log_endpoint
+def home():
+    # app.counter.info("home/")
+    return render_template("home.html")
+
+
+@app.route("/animation/")
+@log_endpoint
+def animation():
+    return render_template("anim.html")
+
+
+@app.route("/clocks/")
+@limiter.exempt
+@app.errorhandler(429)
+@log_endpoint
+def clocks(er=None):
+    was_uploading = r"process_image" in request.endpoint
+    if er:
+        return render_template("clocks.html", rate_error=er, hide_navbar=not was_uploading)
+    return render_template("clocks.html")
+
+
+@app.errorhandler(404)
+@app.errorhandler(400)
+@log_endpoint
+def error_handler(error):
+    app.logger.error(f"{error.code}: {error}")
+    errorCode = error.code
+    return render_template("error.html", error=error, errorCode=errorCode), errorCode
+
+
+@app.route("/newgif", methods=["GET"])
+@log_endpoint
+def new_gif():
+    render = render_template("upload_gif_form.html")
+    return render
+
+
 
 
 @app.route("/process_image", methods=["GET", "POST"])
 @limit_content_length(5 * 1024 * 1024)
 @limiter.limit("10/1hour")
+@log_endpoint
 def validate_image():
     if request.method == "GET":
         ret = redirect(url_for("new_gif"))
@@ -106,7 +148,6 @@ def validate_image():
 
 
 def _validate():
-    print(f"Processing POST")
     enter = f"{np.random.random(100)}"
     secr = f"{enter}-{time.time()}".encode()
     ah = hashlib.sha1(secr)
@@ -115,9 +156,8 @@ def _validate():
 
     valid = _save_image(jobtoken)
     if valid:
-        print(f"Image was accepted")
         power = request.form.get("powerBar", 50)
-        outsize = request.form.get("sizeBar", 500)
+        outsize = request.form.get("sizeBar", 400)
         palette = request.form.get("palette", None)
 
         power = int(power)
@@ -127,34 +167,17 @@ def _validate():
             abort(400)
         if palette:
             palette = [str(palette)]
-
-        print(f"{'=' * 30} Power:   {power}")
-        print(f"{'=' * 30} Outsize: {outsize}")
-        print(f"{'=' * 30} palette: {palette}")
-
+        app.logger.info(f"Accepted job: pow:{power} outsize:{outsize} palette:{palette}")
         res = create_zoomgif.delay(jobtoken, power, outsize, palette=palette)
         jobid = res.id
 
         response = make_response(render_template("process.html", token=jobtoken, jobid=jobid))
     else:
         response = make_response(render_template("process.html"))
-    # prev_tokens = request.cookies.get("all_tokens", None)
-    # if prev_tokens:
-    #     print(f"prev: {prev_tokens}")
-    #     prev_tokens = pickle.loads(prev_tokens.encode())
-    # else:
-    #     prev_tokens = []
-
-    # all_tokens = prev_tokens + [token]
-
-    # encod = pickle.dumps(all_tokens)
-    # rend.set_cookie("all_tokens", encod, max_age=12 * 30)
     return response
-    # return render_template("upload_gif_form.html", header_text="Invalid format, try again.")
 
 
 def _save_image(dest_name):
-    print(f"jobname: {dest_name}")
     image = request.files["upImage"]
     imbytes = request.files['upImage'].read()
     # bytesLike = BytesIO(imstr)
@@ -170,12 +193,12 @@ def _save_image(dest_name):
 
         if extension.lower() not in app.config["ALLOWED_IMAGE_EXTENSIONS"]:
             return False
-        print(f"Saving image: {outpath}")
+        app.logger.info(f"saving image: {outname}")
         cv2.imwrite(outpath, npimg)
         return True
 
     except Exception as err:
-        print(f"Error when saving image: {err}")
+        app.logger.error(f"Error when saving image: {err}")
         return False
 
 
@@ -183,6 +206,7 @@ def _save_image(dest_name):
 @app.route("/gif/<token>/", methods=["GET"])
 # @app.route("/gif/", methods=["GET"])
 @limiter.exempt
+@log_endpoint
 def gif(token=None, jobid=None):
     print(f"Checking gif, token: {token}, jobid: {jobid}")
     imgPath = os.path.join(app.config['RESOURCE_DIRECTORY'], f"{token}.gif")
@@ -206,7 +230,7 @@ def gif(token=None, jobid=None):
             else:
                 text = "Image is missing. Is this valid request?"
         except Exception as err:
-            pass
+            app.logger.error(f"Checkin que error: {err}")
             text = "Error when checking que."
 
         return render_template("process_results.html", workStatus=text)
@@ -217,7 +241,6 @@ def gif(token=None, jobid=None):
 def find_job_in_celery(jobid):
     i = celery_app.control.inspect()
     reg = list(i.registered().keys())[0]
-    print(f"regname: {reg}")
     i = celery_app.control.inspect([reg])
 
     queue = 0
@@ -290,10 +313,11 @@ def find_job_in_celery(jobid):
 
 
 @app.route("/about")
+@log_endpoint
 def about():
     render = render_template("about.html")
     return render
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80, debug=False)
+    app.run(host="0.0.0.0", port=80, debug=True)
