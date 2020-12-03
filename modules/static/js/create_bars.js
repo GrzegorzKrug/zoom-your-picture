@@ -2,8 +2,8 @@ const ids = ["powerBar", "sizeBar"];
 const textids = ["powerText", "sizeText"];
 const text = ["Power", "Output size"];
 const minvals = [50, 50];
-const maxvals = [150, 500];
-const vals = [100, 500];
+const maxvals = [150, 400];
+const vals = [100, 300];
 const steps = [1, 5];
 
 function CreateBars()  {

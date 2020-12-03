@@ -52,5 +52,6 @@ def remove_old_pics(maxAge=60 * 60):
     if count_files > 0:
         logger.info(f"Removed {count_files} files")
 
+
 if __name__ == "__main__":
     app.start()

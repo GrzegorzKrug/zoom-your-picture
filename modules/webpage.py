@@ -51,7 +51,6 @@ app.counter = counter
 app.config["IMAGE_DIRECTORY"] = os.path.abspath("incoming")
 app.config["RESOURCE_DIRECTORY"] = os.path.abspath("static/outputgifs")
 
-
 os.makedirs(app.config['IMAGE_DIRECTORY'], exist_ok=True)
 os.makedirs(app.config['RESOURCE_DIRECTORY'], exist_ok=True)
 
@@ -71,8 +70,11 @@ def limit_content_length(max_length):
             if cl is not None and cl > max_length:
                 abort(413)
             return f(*args, **kwargs)
+
         return wrapper
+
     return decorator
+
 
 def log_endpoint(f):
     @wraps(f)
@@ -81,20 +83,19 @@ def log_endpoint(f):
         app.counter.info(req.url_rule)
         app.logger.info(f"{req.method}: {req.path}")
         return f(*args, **kwargs)
+
     return wrapper
 
-        
+
 @app.route("/")
 @log_endpoint
 def blank():
-    app.counter.info("root")
     return redirect(url_for('home'))
 
 
 @app.route("/home/")
 @log_endpoint
 def home():
-    # app.counter.info("home/")
     return render_template("home.html")
 
 
@@ -131,8 +132,6 @@ def new_gif():
     return render
 
 
-
-
 @app.route("/process_image", methods=["GET", "POST"])
 @limit_content_length(5 * 1024 * 1024)
 @limiter.limit("10/1hour")
@@ -157,13 +156,13 @@ def _validate():
     valid = _save_image(jobtoken)
     if valid:
         power = request.form.get("powerBar", 50)
-        outsize = request.form.get("sizeBar", 400)
+        outsize = request.form.get("sizeBar", 200)
         palette = request.form.get("palette", None)
 
         power = int(power)
         outsize = int(outsize)
 
-        if power < 10 or power > 150 or outsize < 50 or outsize > 500:
+        if power < 10 or power > 150 or outsize < 50 or outsize > 400:
             abort(400)
         if palette:
             palette = [str(palette)]
