@@ -541,7 +541,7 @@ def start_job(src_path, output_path, power, output_size=None, palette=None):
     make_mozaic_and_gif(src_path, selection=palette, config=config)
     duration = int(time.time() - t0)
 
-    logger.info(f"Task completed: {os.path.basename(src_path)} in {duration:>4.0f}s")
+    logger.info(f"Task completed: {os.path.basename(src_path)} in {duration:>1.0f}s")
 
 
 "Consts"
