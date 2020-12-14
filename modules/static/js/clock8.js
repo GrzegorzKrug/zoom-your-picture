@@ -35,11 +35,12 @@ var slowArrowLenght = 40;
 
     function get_8_time(){
       var d = new Date();
-      var n = d.getTime() + timezoneOffset;
+      var n = d.getTime() + timezoneOffset; // ms
       whole_day = 60*60*24;
       cur_time = (n/1000) % whole_day;
 
       hour = cur_time / whole_day;
+      // This day has no full minutes at end of day
       min = parseInt(cur_time/100) %100/100;
       sec = parseInt(cur_time) %100/100;
 

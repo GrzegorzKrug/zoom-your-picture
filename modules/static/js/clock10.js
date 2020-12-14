@@ -33,7 +33,7 @@ var slowArrowLenght = 40;
 
     function get_10_time(){
       var d = new Date();
-      var n = d.getTime() + timezoneOffset;
+      var n = d.getTime() + timezoneOffset;  // ms
       whole_day = 60*60*24;
       cur_time = (n/1000) % whole_day;
 
