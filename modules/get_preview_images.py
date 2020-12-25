@@ -1,53 +1,74 @@
+import imutils
 import shutil
+import numpy as np
+import copy
 import glob
+import cv2
 import os
 import re
-import copy
 
 
 
 PIC_NAMES = [
-    'alien',
+    #'alien',
     'alienmonster',
-    'avocado',
+    #'avocado',
     'beamingfacewithsmilingeyes',
-    'baguettebread',
+    #'baguettebread',
     'butterfly',
     'banana',
     'babychick',
     'balloon',
     'books',
     'bird',
-    'cat',
+    #'cat',
     'cactus',
     'carrot',
+    #'clapperboard',
     'dragon',
-    'dog',
-    'duck',
+    #'dog',
+    #'duck',
     'eyes',
-    'frog',
+    'fox',
     'fire',
+    'fish',
+    'frog',
+    #'flagpoland',
     'ghost',
     'growingheart',
     'gemstone',
-    'hamburger',
+    #'hamburger',
+    'honeybee',
+    'lizard',
     'octopus',
+    'okhandlightskintone',
     'parrot',
+    'panda',
     'penguin',
     'pizza',
-    'rocket',
+    'purpleheart',
     'rainbow',
-    'smilingfacewithsmilingeyes',
+    #'radioactive',
+    #'rabbit',
+    #'rabbitface',
+    'recyclingsymbol',
+    'rooster',
+    #'rocket',
+    #'smilingfacewithsmilingeyes',
+    #'shark',
+    'shield',
 ]
 
 PAL_DIR = os.path.join('backend', 'palette')
 DEST_DIR = os.path.join('static', 'emotes')
+stack = None
+SIZE = 40
 
 for family in os.listdir(PAL_DIR):
     path = os.path.join(PAL_DIR, family)
     count = 0
     if os.path.isdir(path):
-        "Check if this is directory"
+        "CHECK FAMILY Loop LEVEL"
         destination = os.path.join(DEST_DIR, family)
         os.makedirs(destination, exist_ok=True)
 
@@ -61,19 +82,38 @@ for family in os.listdir(PAL_DIR):
                 count += 1
 
         all_pics = copy.copy(PIC_NAMES)
-        for fil in os.listdir(destination):
-            name = os.path.basename(fil)[:-4]
-            
-            try:
-                all_pics.pop(all_pics.index(name))
-            except ValueError:
-                print(f"This file is not on wanted list!: {family} {fil}")
+        preview = None
+        for name in PIC_NAMES:
+            "Check pictures in order from list"
+            fil = f"{name}.png"
 
+            img_array = cv2.imread(os.path.join(destination, fil), cv2.IMREAD_UNCHANGED)
+            try:
+                img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2BGRA)
+                img_array = cv2.resize(img_array, (SIZE,SIZE))
+                all_pics.pop(all_pics.index(name))
+            except Exception:
+                img_array = np.zeros((SIZE,SIZE,4), dtype=np.uint8)
+                #img_array = cv2.cvtColor(img_array, cv2.COLOR_BGR2BGRA)
+
+            if preview is not None:
+                #print(preview.shape, img_array.shape)
+                preview = np.concatenate([preview, img_array], axis=1)
+            else:
+                preview = img_array
+
+        "Save preview image is exists"
+        if preview is not None:
+            cv2.imwrite(os.path.join(DEST_DIR, f"{family}.png"), preview)
+            if stack is not None:
+                stack = np.concatenate([stack, preview], axis=0)
+            else:
+                stack = preview
+            
         print()
         print(f"{path}")
         print(f"missing:\n{all_pics}")
  
     
-    else:
-        pass
-
+if stack is not None:
+    cv2.imwrite(os.path.join(DEST_DIR, f"STACK.png"), stack)
