@@ -216,6 +216,7 @@ def gif(token=None, jobid=None):
 
     url = url_for("static", filename=f"outputgifs/{token}.gif")
     if isImage:
+        app.logger.info(f"Sending image, size: {os.stat(imgPath).st_size/1000:4.1f}kB")
         return render_template("process_results.html", imgPath=url)
     elif jobid:
         try:
@@ -229,7 +230,7 @@ def gif(token=None, jobid=None):
             else:
                 text = "Image is missing. Is this valid request?"
         except Exception as err:
-            app.logger.error(f"Checkin que error: {err}")
+            app.logger.error(f"Checking que error: {err}")
             text = "Error when checking que."
 
         return render_template("process_results.html", workStatus=text)

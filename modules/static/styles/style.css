@@ -145,6 +145,16 @@ content {
     text-shadow: 0.05em 0.05em rgba(0, 0, 50, 0.9);
 }
 
+#radioContainer{
+  display: grid;
+  grid-column-gap: 1%;
+  grid-template-columns: 150px 500px;
+  grid-row-gap: 2px;
+}
+
+.palette_preview{
+  grid-column: 4 / 5;
+}
 
 @keyframes highlightlink {
 

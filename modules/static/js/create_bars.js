@@ -59,11 +59,20 @@ const radioText = [
         "Joypixels", "Samsung", "Twitter",
         ]
 
+const pics = [
+  'messenger_emotes.png', "emojidex_emotes.png",
+  "google_emotes.png", "facebook_emotes.png",
+  "joypixels_emotes.png", "samsung_emotes.png", "twitter_emotes.png"
+]
+
 function CreateRadios()  {
     var root = document.getElementById("radioContainer");
 //        root.style.display = "flex";
 
     for(i=0; i<radioText.length; i++){
+        box = document.createElement("container")
+        box.setAttribute("class", "palette_preview")
+
         rad = document.createElement("input");
         rad.type = "radio";
         rad.id = "radio-emoji-" + i;
@@ -77,10 +86,20 @@ function CreateRadios()  {
         tx = document.createElement("i");
         tx.innerHTML = radioText[i];
         tx.style['font-style'] = "normal";
-
         lab.appendChild(rad);
         lab.appendChild(tx);
+
+        img = document.createElement("img");
+        img.src = "/static/emotes/" + pics[i];
+        img.setAttribute("class", "preview_image");
+        img.style.display = 'inline-block';
+
+//        box.appendChild(lab);
+//        box.appendChild(img);
+
+//        root.appendChild(box);
         root.appendChild(lab);
+        root.appendChild(img);
     }
 }
 
