@@ -147,13 +147,14 @@ content {
 
 #radioContainer{
   display: grid;
+  justify-content: center;
   grid-column-gap: 1%;
-  grid-template-columns: 150px 500px;
-  grid-row-gap: 2px;
+  grid-template-columns: 200px 1500px;
+  grid-row-gap: 5px;
 }
 
 .palette_preview{
-  grid-column: 4 / 5;
+
 }
 
 @keyframes highlightlink {
