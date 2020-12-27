@@ -76,7 +76,6 @@ content {
   margin-left: 100px;
 }
 
-
 .navbar{
  margin-left: 4vw;
  margin-right: 4vw;
@@ -145,17 +144,6 @@ content {
     text-shadow: 0.05em 0.05em rgba(0, 0, 50, 0.9);
 }
 
-#radioContainer{
-  display: grid;
-  justify-content: center;
-  grid-column-gap: 1%;
-  grid-template-columns: 200px 1500px;
-  grid-row-gap: 5px;
-}
-
-.palette_preview{
-
-}
 
 @keyframes highlightlink {
 

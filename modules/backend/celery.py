@@ -32,7 +32,7 @@ def setup_periodic_tasks(sender, **kwargs):
 def remove_old_pics(maxAge=60 * 60):
     work_dirs = [
             os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'incoming')),
-            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static', 'outputgifs'))
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'static', 'outputpics'))
     ]
     count_files = 0
 

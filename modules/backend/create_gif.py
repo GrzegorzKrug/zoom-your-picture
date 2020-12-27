@@ -348,7 +348,8 @@ def get_mozaic(target, palette_list, config, ignore_image_size=True, fill_border
         timeend = time.time()
         duration = timeend - time0
         # print(f"{row_num:>3} of {loop_range} was executed in: {duration:>4.1f}s")
-    logger.info(f"avg steps: {np.average(steps):>3.1f}, all: {np.sum(steps) / 1e6:>3.2f}M, pixels: {pixel_count/1000:>4.1f}k")
+    logger.info(
+            f"avg steps: {np.average(steps):>3.1f}, all: {np.sum(steps) / 1e6:>3.2f}M, pixels: {pixel_count / 1000:>4.1f}k")
     return output
 
 
@@ -378,6 +379,25 @@ def load_palette(config=None):
     return palette
 
 
+def make_mozaic(target_path, config, selection=None):
+    MAX_PIC_SIZE = config['maxpicsize']
+    try:
+        image = cv2.imread(target_path, cv2.IMREAD_COLOR)
+        image = scale_image_to_max_dim(image, MAX_PIC_SIZE)
+        height, width, _ = image.shape
+
+        all_pallettes = load_palette(config)
+        palette_list = get_palette_list(all_pallettes, selection)
+        mozaic = get_mozaic(image, palette_list, config, fill_border_at_error=FILL_BORDER_WHEN_CROP)
+        mozaic = scale_image_to_max_dim(mozaic, config['outputsize'])
+        cv2.imwrite(config['outputpath'], mozaic)
+
+    except Exception as err:
+        tb_text = traceback.format_exception(type(err), err, err.__traceback__)
+        tb_text = ''.join(tb_text)
+        print(f"Error during making mozaic and gif: {tb_text}")
+
+
 def make_mozaic_and_gif(target_path, config, selection=None):
     MAX_PIC_SIZE = config['maxpicsize']
     try:
@@ -388,7 +408,6 @@ def make_mozaic_and_gif(target_path, config, selection=None):
         all_pallettes = load_palette(config)
         palette_list = get_palette_list(all_pallettes, selection)
         mozaic = get_mozaic(image, palette_list, config, fill_border_at_error=FILL_BORDER_WHEN_CROP)
-        # print(f"Mozaic size: {mozaic.shape}")
         make_gif(mozaic, config)
 
     except Exception as err:
@@ -505,7 +524,7 @@ def get_palette_list(all_palettes, selection=None):
         return [random.choice(list(all_palettes.values()))]
 
 
-def start_job(src_path, output_path, power, output_size=None, palette=None):
+def start_job_zoom(src_path, output_path, power, output_size=None, palette=None):
     """"""
     t0 = time.time()
 
@@ -544,16 +563,59 @@ def start_job(src_path, output_path, power, output_size=None, palette=None):
     logger.info(f"Task completed: {os.path.basename(src_path)} in {duration:>1.0f}s")
 
 
+def start_job_mozaic(src_path, output_path, power, output_size=None, palette=None):
+    """"""
+    t0 = time.time()
+
+    # OUTPUT_GIF_MAX_SIZE = output_size
+    image = cv2.imread(src_path)
+    height, width, ch = image.shape
+    if output_size > 2000:
+        OUTPUT_SIZE = 2000
+    elif output_size:
+        OUTPUT_SIZE = output_size
+    else:
+        OUTPUT_SIZE = 1000
+
+    PROC_POWER = power
+    cur_size = max(height, width)
+    PIXEL_RATIO = round(cur_size / PROC_POWER)
+    PIXEL_RATIO = 1 if PIXEL_RATIO < 1 else PIXEL_RATIO
+    MAX_PIC_SIZE = PROC_POWER * PIXEL_RATIO
+
+    PAL_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "palette"))
+    PAL_PATH = os.path.join(PAL_DIR, "palettes.pickle")
+    # pixels = (height // PIXEL_RATIO) * (width // PIXEL_RATIO)
+
+    config = {"pixelratio": PIXEL_RATIO, "power": PROC_POWER,
+              "outputsize": OUTPUT_SIZE, "maxpicsize": MAX_PIC_SIZE,
+              "outputpath": output_path,
+              "paldir": PAL_DIR, "palpath": PAL_PATH}
+    print(f"Input height: {height}, width: {width}")
+    print(f"Processing power: {PROC_POWER}")
+    print(f"Pixel ratio: {PIXEL_RATIO}")
+    # print(f"Pixels to find: {pixels:,}")
+    print(f"Processing image size: {MAX_PIC_SIZE}")
+    print(f"Output size: {OUTPUT_SIZE}")
+    # print(f"Output max size: {OUTPUT_GIF_MAX_SIZE}")
+    # print(f"Output max size: {OUTPUT_GIF_MAX_SIZE}")
+
+    make_mozaic(src_path, selection=palette, config=config)
+    duration = int(time.time() - t0)
+
+    logger.info(f"Task completed: {os.path.basename(src_path)} in {duration:>1.0f}s")
+
+
 "Consts"
 SAVE_EXT = "jpg"
 AVATAR_SIZE = 50
 FILL_BORDER_WHEN_CROP = True
 
 if __name__ == "__main__":
-    srcpath = os.path.join("..", "incoming", "1606699002-d57e8f63456428ef1e8e5576bc3fe79d88a59f9c.png")
+    srcpath = os.path.join("..", "catsloth.jpg")
     outpath = os.path.join("..", 'static', "outputgifs", "1606699002-d57e8f63456428ef1e8e5576bc3fe79d88a59f9c.gif")
     # DistanceGraph.__module__ = "backend.create_gif"
     # recreate_all_palettes()
-    start_job(srcpath, outpath, 300, 600)
+    start_job_mozaic(srcpath, outpath, 300, 600)
     # pal = load_palette()
     # print(pal)

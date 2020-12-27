@@ -7,7 +7,7 @@ from flask import redirect, url_for, abort, request
 from flask import render_template, make_response
 # from flask_scss import Scss
 
-from backend.tasks import create_zoomgif
+from backend.tasks import create_zoomgif, create_mozaic
 from backend.celery import app as celery_app
 
 import logging
@@ -49,7 +49,8 @@ app.logger = logger
 app.counter = counter
 
 app.config["IMAGE_DIRECTORY"] = os.path.abspath("incoming")
-app.config["RESOURCE_DIRECTORY"] = os.path.abspath("static/outputgifs")
+app.config["RESOURCE_DIR_NAME"] = "outputpics"
+app.config["RESOURCE_DIRECTORY"] = os.path.abspath(os.path.join("static", app.config["RESOURCE_DIR_NAME"]))
 
 os.makedirs(app.config['IMAGE_DIRECTORY'], exist_ok=True)
 os.makedirs(app.config['RESOURCE_DIRECTORY'], exist_ok=True)
@@ -158,21 +159,58 @@ def _validate():
         power = request.form.get("powerBar", 50)
         outsize = request.form.get("sizeBar", 200)
         palette = request.form.get("palette", None)
+        mode = request.form.get("mode", 0)
 
         power = int(power)
         outsize = int(outsize)
+        mode = int(mode)
 
-        if power < 10 or power > 150 or outsize < 50 or outsize > 400:
-            abort(400)
         if palette:
             palette = [str(palette)]
-        app.logger.info(f"Accepted job: pow:{power} outsize:{outsize} palette:{palette}")
-        res = create_zoomgif.delay(jobtoken, power, outsize, palette=palette)
-        jobid = res.id
 
-        response = make_response(render_template("process.html", token=jobtoken, jobid=jobid))
+        if power < 10 or power > 150:
+            abort(400)
+
+        if mode == 0:
+            "Check params for mozaic"
+
+            make_bigger = request.form.get("makeBigger", False)
+            if power < 10 or power > 150:
+                abort(400)
+
+            if make_bigger:
+                pic_format = "jpg"
+                outsize *= 2
+            else:
+                pic_format = "png"
+
+            if not make_bigger and (outsize < 50 or outsize > 1000):
+                abort(400)
+
+            if make_bigger and (outsize < 50 or outsize > 2000):
+                abort(400)
+
+            res = create_mozaic.delay(jobtoken, power, pic_format, outsize, palette=palette)
+            jobid = res.id
+
+        elif mode == 1:
+            "Check params for zoom"
+            pic_format = "gif"
+            if outsize < 50 or outsize > 400:
+                abort(400)
+            res = create_zoomgif.delay(jobtoken, power, outsize, palette=palette)
+            jobid = res.id
+        else:
+            abort(400)
+
+        app.logger.info(f"Accepted job: pow:{power} outsize:{outsize} palette:{palette}")
+        destination = url_for("showresult", token=jobtoken, jobid=jobid, format=pic_format)
+        response = make_response(render_template("process.html", destination=destination))
+
     else:
+        app.logger.error("Picture is not valid")
         response = make_response(render_template("process.html"))
+
     return response
 
 
@@ -201,22 +239,22 @@ def _save_image(dest_name):
         return False
 
 
-@app.route("/gif/<token>/<jobid>", methods=["GET"])
-@app.route("/gif/<token>/", methods=["GET"])
-# @app.route("/gif/", methods=["GET"])
+@app.route("/result/<format>/<token>/<jobid>/", methods=["GET"])
+@app.route("/result/<format>/<token>/", methods=["GET"])
+@app.route("/result/")
 @limiter.exempt
 @log_endpoint
-def gif(token=None, jobid=None):
-    print(f"Checking gif, token: {token}, jobid: {jobid}")
-    imgPath = os.path.join(app.config['RESOURCE_DIRECTORY'], f"{token}.gif")
+def showresult(format=None, token=None, jobid=None):
+    fileFormat = str(format) if format else "gif"
+    fileFormat = fileFormat.lower()
+
+    imgPath = os.path.join(app.config['RESOURCE_DIRECTORY'], f"{token}.{fileFormat}")
     isImage = os.path.isfile(imgPath)
     avg_time = 1
-    # if token is None:
-    #     token = request.args.get(token, None)
 
-    url = url_for("static", filename=f"outputgifs/{token}.gif")
+    url = url_for("static", filename=f"{app.config['RESOURCE_DIR_NAME']}/{token}.{fileFormat}")
     if isImage:
-        app.logger.info(f"Sending image, size: {os.stat(imgPath).st_size/1000:4.1f}kB")
+        app.logger.info(f"Sending image, size: {os.stat(imgPath).st_size / 1000:4.1f}kB")
         return render_template("process_results.html", imgPath=url)
     elif jobid:
         try:
@@ -237,6 +275,71 @@ def gif(token=None, jobid=None):
     else:
         abort(400)
 
+
+# @app.route("/jpg/<token>/<jobid>", methods=["GET"])
+# @app.route("/jpg/<token>/", methods=["GET"])
+# @limiter.exempt
+# @log_endpoint
+# def jpg(token=None, jobid=None):
+#     imgPath = os.path.join(app.config['RESOURCE_DIRECTORY'], f"{token}.jpg")
+#     isImage = os.path.isfile(imgPath)
+#     avg_time = 1
+#
+#     url = url_for("static", filename=f"{app.config['RESOURCE_DIR_NAME']}/{token}.jpg")
+#     if isImage:
+#         app.logger.info(f"Sending image, size: {os.stat(imgPath).st_size / 1000:4.1f}kB")
+#         return render_template("process_results.html", imgPath=url)
+#     elif jobid:
+#         try:
+#             isProc, isQue, quePos = find_job_in_celery(jobid)
+#             if isProc:
+#                 text = "Your image is now generated."
+#             elif isQue:
+#                 text = f"Your image is in queue, position: {quePos}. Max time est: {quePos * avg_time} min"
+#             elif quePos >= 9:
+#                 text = f"Your image is in queue, position: 10+"
+#             else:
+#                 text = "Image is missing. Is this valid request?"
+#         except Exception as err:
+#             app.logger.error(f"Checking que error: {err}")
+#             text = "Error when checking que."
+#
+#         return render_template("process_results.html", workStatus=text)
+#     else:
+#         abort(400)
+
+# @app.route("/png/<token>/<jobid>", methods=["GET"])
+# @app.route("/png/<token>/", methods=["GET"])
+# @limiter.exempt
+# @log_endpoint
+# def png(token=None, jobid=None):
+#     imgPath = os.path.join(app.config['RESOURCE_DIRECTORY'], f"{token}.jpg")
+#     isImage = os.path.isfile(imgPath)
+#     avg_time = 1
+#
+#     url = url_for("static", filename=f"{app.config['RESOURCE_DIR_NAME']}/{token}.jpg")
+#     if isImage:
+#         app.logger.info(f"Sending image, size: {os.stat(imgPath).st_size / 1000:4.1f}kB")
+#         return render_template("process_results.html", imgPath=url)
+#     elif jobid:
+#         try:
+#             isProc, isQue, quePos = find_job_in_celery(jobid)
+#             if isProc:
+#                 text = "Your image is now generated."
+#             elif isQue:
+#                 text = f"Your image is in queue, position: {quePos}. Max time est: {quePos * avg_time} min"
+#             elif quePos >= 9:
+#                 text = f"Your image is in queue, position: 10+"
+#             else:
+#                 text = "Image is missing. Is this valid request?"
+#         except Exception as err:
+#             app.logger.error(f"Checking que error: {err}")
+#             text = "Error when checking que."
+#
+#         return render_template("process_results.html", workStatus=text)
+#     else:
+#         abort(400)
+#
 
 def find_job_in_celery(jobid):
     i = celery_app.control.inspect()
@@ -320,4 +423,4 @@ def about():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80, debug=False)
+    app.run(host="0.0.0.0", port=80, debug=True)

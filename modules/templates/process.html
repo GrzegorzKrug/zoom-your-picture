@@ -6,15 +6,14 @@ Processing
 {% endblock %}
 
 {% block content %}
-  {% if token %}
+  {% if destination %}
   <script id="redirect" src="{{ url_for('static', filename='js/redirectScript.js') }}">
   </script>
-  <body id='runscritp' onload="DelayedRedirect(30, '{{ url_for('gif', token=token, jobid=jobid) }}' );"></body>
+  <body id='runscritp' onload="DelayedRedirect(30, '{{ destination }}' );"></body>
 
   <h3>Your image was accepted.</h3>
-
   <br>
-  <a href="{{ url_for('gif', token=token, jobid=jobid) }}">
+  <a href="{{ destination }}">
     Average processing time is 1min. You will be redirected after 30s.
   </a>
   {% else %}

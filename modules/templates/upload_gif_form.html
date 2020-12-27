@@ -5,6 +5,10 @@
         #submitBt {
         visibility: hidden;
         }
+        .header{
+          color: rgb(105,155,255);
+          text-shadow: 0 0 15px rgb(150,150,150);
+        }
         #validationTextField {
         font-weight: 1000;
         font-Family: Verdana;
@@ -14,8 +18,37 @@
             display: none;
         }
         .preview {
-            margin: 15px;
+            margin: 20px;
         }
+
+        #modeContainer{
+          margin-top: 15px;
+          display: grid;
+          justify-content: center;
+          align-content: start;
+          grid-template-columns: 200px 350px;
+        }
+        #modeContainer > .gridElement{
+          padding-top:    5px;
+          padding-bottom: 5px;
+          text-align: left;
+        }
+
+        #radioContainer{
+          display: grid;
+          justify-content: center;
+          align-items: center;
+          grid-column-gap: 1%;
+          grid-template-columns: 170px 1300px;
+          grid-row-gap: 15px;
+        }
+
+        .emojiSelect{
+          margin: 5px;
+          font-weight: 800;
+
+        }
+
     </style>
 {% endblock %}
 
@@ -23,7 +56,7 @@
     {% if header_text %}
         {{ header_text }}
     {% else %}
-    <h3>Upload your image.</h3>
+    <h4>Upload your image.</h4>
     {% endif %}
 {% endblock %}
 
@@ -40,9 +73,12 @@
                id="upImage">
 
     </div>
+    <div id="modeContainer"></div>
     <div id="barContainer"></div>
-      <label>Select emojis palette:</label>
+
     <div id="radioContainer">
+      <i class="emojiSelect" text-align='left'>Select emojis:</i>
+      <div>Palette preview:</div>
     </div>
     <div class="preview">
         <img id="preview" alt="preview" onclick="PictureClicked();">
