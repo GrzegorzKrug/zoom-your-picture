@@ -3,7 +3,7 @@ Make gif that animates to or from pixel
 
 ![Me](modules/static/megif.gif)
 
-![Superman](modules/static/suerman.gif)
+![superman](modules/static/superman.gif)
 
 # Version
 Python 3.8.5
