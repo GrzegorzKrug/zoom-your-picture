@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html class="main gtatqa idc0_338" lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body><div class="navbar">
+        <p id="TopNavBar">
+            <a href="http://192.168.1.12/home" class="active">Home</a>
+            <a href="http://192.168.1.12/newgif">New Gif</a>
+            <a href="http://192.168.1.12/about">About</a>
+
+        </p>
+        <p id="TopNavBar2">
+            <a href="http://192.168.1.12/clocks/">clocks</a>
+            <a href="http://192.168.1.12/animation/">animation</a>
+<!--            <a href="https://en.uncyclopedia.co/wiki/Special:RandomRootpage/Main">Random fake</a>-->
+        </p>
+    </div>
+
+    
+        
+    
+        <link rel="stylesheet" href="ZoomIt%20-%20Gif%20maker_pliki/style.css">
+        <link rel="stylesheet" href="ZoomIt%20-%20Gif%20maker_pliki/google-icons.css">
+        
+    <style>
+        #submitBt {
+        visibility: hidden;
+        }
+        .header{
+          color: rgb(105,155,255);
+          text-shadow: 0 0 15px rgb(150,150,150);
+        }
+        #validationTextField {
+        font-weight: 1000;
+        font-Family: Verdana;
+        text-shadow: 1px 1px rgb(0,0,0);
+        }
+        img {
+            display: none;
+        }
+        .preview {
+            margin: 20px;
+        }
+
+        #modeContainer{
+          margin-top: 15px;
+          display: grid;
+          justify-content: center;
+          align-content: start;
+          grid-template-columns: 200px 350px;
+        }
+        #modeContainer > .gridElement{
+          padding-top:    5px;
+          padding-bottom: 5px;
+          text-align: left;
+        }
+
+        #radioContainer{
+          display: grid;
+          justify-content: center;
+          align-items: center;
+          grid-column-gap: 1%;
+          grid-template-columns: 170px 1300px;
+          grid-row-gap: 15px;
+        }
+
+        .emojiSelect{
+          margin: 5px;
+          font-weight: 800;
+
+        }
+
+    </style>
+
+        <title>ZoomIt -  Gif maker</title>
+        <meta charset="UTF-8">
+        
+
+    
+        
+            <div class="header">
+                
+    
+    <h4>Upload your image.</h4>
+    
+
+            </div>
+            <div class="content">
+                
+
+<div class="container">
+  <form action="/process_image" method="POST" enctype="multipart/form-data" onchange="ValidateFileIfImage();">
+    <div class="form-group">
+        <input type="file" class="custom-file-input" name="upImage" id="upImage">
+
+    </div>
+    <div id="modeContainer"><label class="gridElement"><input type="radio" name="mode" value="0" id="mode0" checked="checked"><i>Mozaic</i></label><label class="gridElement"><i style="font-style: normal; font-size: 0.8em;">Double size, but JPG</i><input type="checkbox" name="makeBigger" value="true"></label><label class="gridElement"><input type="radio" name="mode" value="1" id="mode1"><i>Zoom</i></label><label class="gridElement"></label></div>
+    <div id="barContainer" style="display: flex; justify-content: center;"><div style="padding: 3px; margin: 10px;"><input type="range" min="50" max="150" step="1" id="powerBar" name="powerBar" barid="0" value="100"><span id="textid0" style="position: relative; top: -0.2em;">Power 100 px</span></div><div style="padding: 3px; margin: 10px;"><input type="range" min="50" max="1000" step="5" id="sizeBar" name="sizeBar" barid="1" value="500"><span id="textid1" style="position: relative; top: -0.2em;">Output size 500 px</span></div></div>
+
+    <div id="radioContainer">
+      <i class="emojiSelect" text-align="left">Select emojis:</i>
+      <div>Palette preview:</div>
+    <label class="palette_radio" style="text-align: left;"><input type="radio" id="radio-emoji-0" name="palette" value="messenger" style="margin-left: 15px;"><i style="font-style: normal; font-weight: 100; text-shadow: rgb(0, 245, 0) 0px 0px 10px;">Messenger</i></label><img src="ZoomIt%20-%20Gif%20maker_pliki/messenger_emotes.png" class="preview_palette" style="display: block;"><label class="palette_radio" style="text-align: left;"><input type="radio" id="radio-emoji-1" name="palette" value="dex" style="margin-left: 15px;"><i style="font-style: normal;">Dex</i></label><img src="ZoomIt%20-%20Gif%20maker_pliki/emojidex_emotes.png" class="preview_palette" style="display: block;"><label class="palette_radio" style="text-align: left;"><input type="radio" id="radio-emoji-2" name="palette" value="google" style="margin-left: 15px;"><i style="font-style: normal; text-shadow: rgb(0, 185, 0) 0px 0px 20px;">Google</i></label><img src="ZoomIt%20-%20Gif%20maker_pliki/google_emotes.png" class="preview_palette" style="display: block;"><label class="palette_radio" style="text-align: left;"><input type="radio" id="radio-emoji-3" name="palette" value="facebook" style="margin-left: 15px;"><i style="font-style: normal; text-shadow: rgb(0, 185, 0) 0px 0px 20px;">Facebook</i></label><img src="ZoomIt%20-%20Gif%20maker_pliki/facebook_emotes.png" class="preview_palette" style="display: block;"><label class="palette_radio" style="text-align: left;"><input type="radio" id="radio-emoji-4" name="palette" value="joypixels" style="margin-left: 15px;"><i style="font-style: normal;">Joypixels</i></label><img src="ZoomIt%20-%20Gif%20maker_pliki/joypixels_emotes.png" class="preview_palette" style="display: block;"><label class="palette_radio" style="text-align: left;"><input type="radio" id="radio-emoji-5" name="palette" value="samsung" style="margin-left: 15px;" checked="checked"><i style="font-style: normal; font-weight: 100; text-shadow: rgb(0, 245, 0) 0px 0px 10px;">Samsung</i></label><img src="ZoomIt%20-%20Gif%20maker_pliki/samsung_emotes.png" class="preview_palette" style="display: block;"><label class="palette_radio" style="text-align: left;"><input type="radio" id="radio-emoji-6" name="palette" value="twitter" style="margin-left: 15px;"><i style="font-style: normal;">Twitter</i></label><img src="ZoomIt%20-%20Gif%20maker_pliki/twitter_emotes.png" class="preview_palette" style="display: block;"></div>
+    <div class="preview">
+        <img id="preview" alt="preview" onclick="PictureClicked();">
+    </div>
+    <p id="validationTextField"></p>
+    <script id="validateScript" src="ZoomIt%20-%20Gif%20maker_pliki/validateFile.js"></script>
+    <script id="createBarsScript" src="ZoomIt%20-%20Gif%20maker_pliki/create_bars.js"></script>
+    <button id="submitBt" type="submit" class="btn btn-primary">Confirm</button>
+  </form>
+
+</div>
+
+            </div>
+            <div class="footer">
+                
+                    Made by Greg, <a href="https://github.com/GrzegorzKrug">Github</a>.
+                
+            </div>
+            <link rel="shortcut icon" href="http://192.168.1.12/static/favicon.ico">
+        
+</body></html>
