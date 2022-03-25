@@ -8,5 +8,6 @@ Make gif that animates to or from pixel
 # Version
 Python 3.8.5
 
-
+# Example pages
+[Examples zip package](https://raw.githubusercontent.com/GrzegorzKrug/zoom-your-picture/master/examples/examples.zip)
 
