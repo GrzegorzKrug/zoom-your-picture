@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html class="main cotplozv idc0_338" lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"></head><body><div class="navbar">
+        <p id="TopNavBar">
+            <a href="http://192.168.1.12/home" class="active">Home</a>
+            <a href="http://192.168.1.12/newgif">New Gif</a>
+            <a href="http://192.168.1.12/about">About</a>
+
+        </p>
+        <p id="TopNavBar2">
+            <a href="http://192.168.1.12/clocks/">clocks</a>
+            <a href="http://192.168.1.12/animation/">animation</a>
+<!--            <a href="https://en.uncyclopedia.co/wiki/Special:RandomRootpage/Main">Random fake</a>-->
+        </p>
+    </div>
+
+    
+        
+    
+        <link rel="stylesheet" href="ZoomIt%20-%20Clocks_pliki/style.css">
+        <link rel="stylesheet" href="ZoomIt%20-%20Clocks_pliki/google-icons.css">
+        
+    <style>
+        .clock-row{
+            display: flex;
+            justify-content: center;
+        }
+        .clock-row span{
+        width: 250px;
+        }
+    </style>
+
+        <title>ZoomIt -  Clocks </title>
+        <meta charset="UTF-8">
+        
+
+    
+        
+            <div class="header">
+                
+    
+    
+
+            </div>
+            <div class="content">
+                
+<div class="clock-row">
+    <canvas id="canvas8h" width="250" height="250">
+        <script type="text/javascript" src="ZoomIt%20-%20Clocks_pliki/clock8.js"></script>
+    </canvas>
+    <canvas id="canvas10h" width="250" height="250">
+        <script type="text/javascript" src="ZoomIt%20-%20Clocks_pliki/clock10.js"></script>
+    </canvas>
+    <canvas id="canvas12h" width="250" height="250">
+        <script type="text/javascript" src="ZoomIt%20-%20Clocks_pliki/clock12.js"></script>
+    </canvas>
+    <canvas id="canvas24h" width="250" height="250">
+        <script type="text/javascript" src="ZoomIt%20-%20Clocks_pliki/clock24.js"></script>
+    </canvas>
+    <script>
+        var clockrad = 110;
+        var clockx = clockrad+15;
+        var clocky =  clockrad+15;
+        var timezoneOffset = 3600*1000;
+        var plateColor = "rgb(230, 250, 255)";
+        var borderColor = "rgb(150, 160, 195)";
+        var plateLineColor = "rgb(0,0,40)";
+        var innerPlateLineColor = plateLineColor;
+        var plateLineThickness = 5;
+        var borderSize = 15;
+
+        var bigLineColor = "rgb(255, 100, 120)";
+        var smallLineColor = "rgba(0, 0, 0, 0.6)";
+        var labelColor = "rgb(25, 80, 190)";
+
+        var arrowStickColor = "rgb(10, 25, 60)";
+        var arrowStickWidth = 3.5;
+        var arrowHeadLineWidth = 3.5;
+
+        var fastArrowColor = "rgb(0, 230, 255)";
+        var mediumArrowColor = "rgb(0,150,245)";
+        var slowArrowColor = "rgb(50, 100, 215)";
+
+        var fastArrowLenght = 70;
+        var mediumArrowLenght = 50;
+        var slowArrowLenght = 30;
+    </script>
+</div>
+<div class="clock-row">
+    <span>Clock 8</span>
+    <span>Clock 10</span>
+    <span>Clock 12</span>
+    <span>Clock 24</span>
+</div>
+
+            </div>
+            <div class="footer">
+                
+                    Made by Greg, <a href="https://github.com/GrzegorzKrug">Github</a>.
+                
+            </div>
+            <link rel="shortcut icon" href="http://192.168.1.12/static/favicon.ico">
+        
+</body></html>
