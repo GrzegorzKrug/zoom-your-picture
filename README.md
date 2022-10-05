@@ -5,7 +5,10 @@ Make gif that animates to or from pixel
 
 ![superman](modules/static/superman.gif)
 
-# Version
+## 10 hour clocks 
+[Clocks example] (https://grzegorzkrug.github.io/zoom-your-picture/)
+
+## Version
 Python 3.8.5
 
 # Example pages
