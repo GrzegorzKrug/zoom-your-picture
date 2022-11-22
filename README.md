@@ -1,5 +1,5 @@
 # Zoom your picture
-Make gif that animates to or from pixel 
+Convert user picture to animation made from emojis
 
 ![Me](modules/static/megif.gif)
 
