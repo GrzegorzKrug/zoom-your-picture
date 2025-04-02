@@ -1,6 +1,14 @@
 # Zoom your picture
 Web service, that lets user convert picture to animation made from emojis
 
+## Stack
+- Python
+- Numpy
+- Pillow
+- Celery
+- Rest
+- Flask
+
 ![Me](modules/static/megif.gif)
 
 ![superman](modules/static/superman.gif)
